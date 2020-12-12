@@ -9,15 +9,15 @@
     },
     "repository": {
       "type": "git",
-      "url": "git+https://github.com/roblox-aurora/rbxts-transform-env.git"
+      "url": "git+https://github.com/roblox-aurora/rbxts-transform-debug.git"
     },
     "keywords": [],
     "author": "vorlias",
     "license": "MIT",
     "bugs": {
-      "url": "https://github.com/roblox-aurora/rbxts-transform-env/issues"
+      "url": "https://github.com/roblox-aurora/rbxts-transform-debug/issues"
     },
-    "homepage": "https://github.com/roblox-aurora/rbxts-transform-env#readme",
+    "homepage": "https://github.com/roblox-aurora/rbxts-transform-debug#readme",
     "dependencies": {
       "colors": "^1.4.0",
       "dotenv": "^8.2.0",
