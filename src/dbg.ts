@@ -16,10 +16,6 @@ export function transformToInlineDebugPrint(node: ts.Expression): ts.Expression 
 	return createPrintCallExpression([createDbgPrefix(node), node]);
 }
 
-export function isDebugMacro(node: ts.Expression): node is ts.CallExpression {
-	return ts.isCallExpression(node) && ts.isIdentifier(node.expression) && node.expression.text === "$dbg";
-}
-
 export function transformToIIFEDebugPrint(argument: ts.Expression): ts.Expression {
 	const id = factory.createIdentifier("value");
 	return factory.createCallExpression(
@@ -42,19 +38,4 @@ export function transformToIIFEDebugPrint(argument: ts.Expression): ts.Expressio
 		undefined,
 		[argument],
 	);
-}
-
-export default function transformDbgExpression(node: ts.CallExpression): ts.ExpressionStatement | undefined {
-	const { arguments: args } = node;
-	if (args.length > 0) {
-		const [expression] = args;
-		if (ts.isCallExpression(expression)) {
-			console.log("callExpression", expression.getText());
-		}
-
-		return factory.createExpressionStatement(transformToInlineDebugPrint(expression));
-	} else {
-		console.log("invalid args");
-		return;
-	}
 }

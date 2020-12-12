@@ -1,11 +1,8 @@
 import path from "path";
-import ts, { factory } from "typescript";
+import ts from "typescript";
 import fs from "fs";
-import transformDbgExpression, { isDebugMacro, transformToInlineDebugPrint, transformToIIFEDebugPrint } from "./dbg";
+import { transformToInlineDebugPrint, transformToIIFEDebugPrint } from "./dbg";
 
-const enum MacroIdentifier {
-	Debug = "$dbg",
-}
 
 const sourceText = fs.readFileSync(path.join(__dirname, "..", "index.d.ts"), "utf8");
 function isModule(sourceFile: ts.SourceFile) {
@@ -107,6 +104,6 @@ function visitNode(node: ts.Node, program: ts.Program): ts.Node | ts.Node[] | un
 }
 
 interface TransformerConfiguration {}
-export default function transform(program: ts.Program, configuration: TransformerConfiguration) {
+export default function transform(program: ts.Program) {
 	return (context: ts.TransformationContext) => (file: ts.SourceFile) => visitNodeAndChildren(file, program, context);
 }
