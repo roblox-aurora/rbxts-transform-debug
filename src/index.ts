@@ -1,7 +1,7 @@
 import path from "path";
 import ts, { factory } from "typescript";
 import fs from "fs";
-import transformDbgExpression, { isDebugMacro, transformToDebugPrint, transformToIIFEDebugPrint } from "./dbg";
+import transformDbgExpression, { isDebugMacro, transformToInlineDebugPrint, transformToIIFEDebugPrint } from "./dbg";
 
 const enum MacroIdentifier {
 	Debug = "$dbg",
@@ -59,6 +59,39 @@ function visitNodeAndChildren(
 	);
 }
 
+function handleDebugCallExpression(node: ts.CallExpression, functionName: string) {
+	switch (functionName) {
+		case "$dbg": {
+			const [expression] = node.arguments;
+			if (ts.isExpressionStatement(node.parent)) {
+				return transformToInlineDebugPrint(expression);
+			}
+			return transformToIIFEDebugPrint(expression);
+		}
+		default:
+			throw `function ${functionName} cannot be handled by this version of rbxts-transform-debug`;
+	}
+}
+
+function visitCallExpression(node: ts.CallExpression, program: ts.Program) {
+	const typeChecker = program.getTypeChecker();
+	const signature = typeChecker.getResolvedSignature(node);
+	if (!signature) {
+		return node;
+	}
+	const { declaration } = signature;
+	if (!declaration || ts.isJSDocSignature(declaration) || !isModule(declaration.getSourceFile())) {
+		return node;
+	}
+
+	const functionName = declaration.name && declaration.name.getText();
+	if (!functionName) {
+		return node;
+	}
+
+	return handleDebugCallExpression(node, functionName);
+}
+
 function visitNode(node: ts.SourceFile, program: ts.Program): ts.SourceFile;
 function visitNode(node: ts.Node, program: ts.Program): ts.Node | undefined;
 function visitNode(node: ts.Node, program: ts.Program): ts.Node | ts.Node[] | undefined {
@@ -66,51 +99,8 @@ function visitNode(node: ts.Node, program: ts.Program): ts.Node | ts.Node[] | un
 		return;
 	}
 
-	if (ts.isExpressionStatement(node)) {
-		const { expression } = node;
-		if (ts.isCallExpression(expression)) {
-			if (ts.isCallExpression(expression) && ts.isIdentifier(expression.expression)) {
-				const { text: functionName } = expression.expression;
-				if (functionName === MacroIdentifier.Debug) {
-					const expr = transformDbgExpression(expression);
-
-					if (expr) {
-						return expr;
-					}
-				}
-			}
-		}
-	}
-
-	if (ts.isVariableStatement(node)) {
-		const containsDbg = node.declarationList.declarations.some((d) => d.initializer && isDebugMacro(d.initializer));
-		if (containsDbg) {
-			return factory.updateVariableStatement(
-				node,
-				undefined,
-				factory.updateVariableDeclarationList(
-					node.declarationList,
-					node.declarationList.declarations.map((d) => {
-						if (d.initializer && isDebugMacro(d.initializer)) {
-							return factory.updateVariableDeclaration(
-								d,
-								d.name,
-								undefined,
-								undefined,
-								transformToIIFEDebugPrint(d.initializer.arguments[0]),
-							);
-						}
-						return d;
-					}),
-				),
-			);
-		}
-	}
-
-	if (ts.isReturnStatement(node)) {
-		if (node.expression && isDebugMacro(node.expression)) {
-			return factory.updateReturnStatement(node, transformToIIFEDebugPrint(node.expression.arguments[0]));
-		}
+	if (ts.isCallExpression(node)) {
+		return visitCallExpression(node, program);
 	}
 
 	return node;

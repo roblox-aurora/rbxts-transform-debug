@@ -11,7 +11,7 @@
 		"resolveJsonModule": true,
 		"strict": true,
 		"target": "ESNext",
-		"typeRoots": ["node_modules/@rbxts"],
+		"typeRoots": ["node_modules/@rbxts", "../index"],
 
 		// configurable
 		"rootDir": "src",

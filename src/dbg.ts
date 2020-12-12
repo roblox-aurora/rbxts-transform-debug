@@ -5,7 +5,6 @@ function createPrintCallExpression(args: ts.Expression[]) {
 	return factory.createCallExpression(factory.createIdentifier("print"), undefined, args);
 }
 
-
 function createDbgPrefix(node: ts.Node) {
 	const sourceFile = node.getSourceFile();
 	const linePos = sourceFile.getLineAndCharacterOfPosition(node.getStart());
@@ -13,8 +12,8 @@ function createDbgPrefix(node: ts.Node) {
 	return factory.createStringLiteral(`[${relativePath}:${linePos.line}] ${node.getText()} =`, true);
 }
 
-export function transformToDebugPrint(node: ts.Expression): ts.Expression {
-	return createPrintCallExpression([factory.createStringLiteral(node.getText()), node]);
+export function transformToInlineDebugPrint(node: ts.Expression): ts.Expression {
+	return createPrintCallExpression([createDbgPrefix(node), node]);
 }
 
 export function isDebugMacro(node: ts.Expression): node is ts.CallExpression {
@@ -31,10 +30,13 @@ export function transformToIIFEDebugPrint(argument: ts.Expression): ts.Expressio
 				[factory.createParameterDeclaration(undefined, undefined, undefined, id)],
 				undefined,
 				undefined,
-				factory.createBlock([
-					factory.createExpressionStatement(createPrintCallExpression([createDbgPrefix(argument), id])),
-					factory.createReturnStatement(id),
-				]),
+				factory.createBlock(
+					[
+						factory.createExpressionStatement(createPrintCallExpression([createDbgPrefix(argument), id])),
+						factory.createReturnStatement(id),
+					],
+					true,
+				),
 			),
 		),
 		undefined,
@@ -50,7 +52,7 @@ export default function transformDbgExpression(node: ts.CallExpression): ts.Expr
 			console.log("callExpression", expression.getText());
 		}
 
-		return factory.createExpressionStatement(transformToDebugPrint(expression));
+		return factory.createExpressionStatement(transformToInlineDebugPrint(expression));
 	} else {
 		console.log("invalid args");
 		return;
