@@ -3,12 +3,11 @@ import ts from "typescript";
 import fs from "fs";
 import { transformToInlineDebugPrint, transformToIIFEDebugPrint } from "./dbg";
 
-
 const sourceText = fs.readFileSync(path.join(__dirname, "..", "index.d.ts"), "utf8");
 function isModule(sourceFile: ts.SourceFile) {
 	return sourceFile.text === sourceText;
 }
-const imports = new Set<ts.SourceFile>();
+
 function isModuleImportExpression(node: ts.Node, program: ts.Program) {
 	if (!ts.isImportDeclaration(node)) {
 		return false;
@@ -29,8 +28,6 @@ function isModuleImportExpression(node: ts.Node, program: ts.Program) {
 		return false;
 	}
 
-	const source = node.getSourceFile();
-	if (!imports.has(source)) imports.add(source);
 	return true;
 }
 
