@@ -6,4 +6,4 @@ export function makeHello(name: string) {
 const x = 20;
 $dbg(10 > 20);
 $dbg(x);
-print(makeHello("Vorlias"))
+print($dbg(makeHello("Vorlias")))

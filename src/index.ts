@@ -1,5 +1,6 @@
+/* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 import path from "path";
-import ts from "typescript";
+import ts, { factory } from "typescript";
 import fs from "fs";
 import { transformToInlineDebugPrint, transformToIIFEDebugPrint } from "./dbg";
 
@@ -35,39 +36,50 @@ function visitNodeAndChildren(
 	node: ts.SourceFile,
 	program: ts.Program,
 	context: ts.TransformationContext,
+	config: DebugTransformConfiguration,
 ): ts.SourceFile;
 function visitNodeAndChildren(
 	node: ts.Node,
 	program: ts.Program,
 	context: ts.TransformationContext,
+	config: DebugTransformConfiguration,
 ): ts.Node | undefined;
 function visitNodeAndChildren(
 	node: ts.Node,
 	program: ts.Program,
 	context: ts.TransformationContext,
+	config: DebugTransformConfiguration,
 ): ts.Node | undefined {
 	return ts.visitEachChild(
-		visitNode(node, program),
-		(childNode) => visitNodeAndChildren(childNode, program, context),
+		visitNode(node, program, config),
+		(childNode) => visitNodeAndChildren(childNode, program, context, config),
 		context,
 	);
 }
 
-function handleDebugCallExpression(node: ts.CallExpression, functionName: string) {
+function handleDebugCallExpression(
+	node: ts.CallExpression,
+	functionName: string,
+	{ enabled }: DebugTransformConfiguration,
+) {
 	switch (functionName) {
 		case "$dbg": {
 			const [expression] = node.arguments;
 			if (ts.isExpressionStatement(node.parent)) {
-				return transformToInlineDebugPrint(expression);
+				return enabled
+					? transformToInlineDebugPrint(expression)
+					: ts.isCallExpression(expression)
+					? expression
+					: factory.createEmptyStatement();
 			}
-			return transformToIIFEDebugPrint(expression);
+			return enabled ? transformToIIFEDebugPrint(expression) : expression;
 		}
 		default:
 			throw `function ${functionName} cannot be handled by this version of rbxts-transform-debug`;
 	}
 }
 
-function visitCallExpression(node: ts.CallExpression, program: ts.Program) {
+function visitCallExpression(node: ts.CallExpression, program: ts.Program, config: DebugTransformConfiguration) {
 	const typeChecker = program.getTypeChecker();
 	const signature = typeChecker.getResolvedSignature(node);
 	if (!signature) {
@@ -83,24 +95,56 @@ function visitCallExpression(node: ts.CallExpression, program: ts.Program) {
 		return node;
 	}
 
-	return handleDebugCallExpression(node, functionName);
+	return handleDebugCallExpression(node, functionName, config);
 }
 
-function visitNode(node: ts.SourceFile, program: ts.Program): ts.SourceFile;
-function visitNode(node: ts.Node, program: ts.Program): ts.Node | undefined;
-function visitNode(node: ts.Node, program: ts.Program): ts.Node | ts.Node[] | undefined {
+function visitNode(node: ts.SourceFile, program: ts.Program, config: DebugTransformConfiguration): ts.SourceFile;
+function visitNode(node: ts.Node, program: ts.Program, config: DebugTransformConfiguration): ts.Node | undefined;
+function visitNode(
+	node: ts.Node,
+	program: ts.Program,
+	config: DebugTransformConfiguration,
+): ts.Node | ts.Node[] | undefined {
 	if (isModuleImportExpression(node, program)) {
-		return;
+		return factory.createExportDeclaration(
+			undefined,
+			undefined,
+			false,
+			ts.factory.createNamedExports([]),
+			undefined,
+		);
 	}
 
 	if (ts.isCallExpression(node)) {
-		return visitCallExpression(node, program);
+		return visitCallExpression(node, program, config);
 	}
 
 	return node;
 }
 
-interface TransformerConfiguration {}
-export default function transform(program: ts.Program) {
-	return (context: ts.TransformationContext) => (file: ts.SourceFile) => visitNodeAndChildren(file, program, context);
+export interface DebugTransformConfiguration {
+	enabled: boolean;
+	verbose?: boolean;
+	environmentRequires?: Record<string, string | boolean>;
+}
+
+const DEFAULTS: DebugTransformConfiguration = {
+	enabled: true,
+};
+
+export default function transform(program: ts.Program, userConfiguration: DebugTransformConfiguration) {
+	userConfiguration = { ...DEFAULTS, ...userConfiguration };
+	if (userConfiguration.environmentRequires) {
+		for (const [k, v] of Object.entries(userConfiguration.environmentRequires)) {
+			if (
+				(typeof v === "boolean" && process.env[k] === undefined) ||
+				(typeof v === "string" && process.env[k] !== v)
+			) {
+				userConfiguration.enabled = false;
+			}
+		}
+	}
+
+	return (context: ts.TransformationContext) => (file: ts.SourceFile) =>
+		visitNodeAndChildren(file, program, context, userConfiguration);
 }
