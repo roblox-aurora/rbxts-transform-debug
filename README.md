@@ -33,9 +33,9 @@ print(makeHello("Vorlias"))
 
 If this code was ran, our output would give:
 ```
-[src/shared/module.ts:2] `Hello from ${name}!` = Hello from Vorlias!
 [src/shared/module.ts:6] 10 > 20 = false
 [src/shared/module.ts:7] x = 42
+[src/shared/module.ts:2] `Hello from ${name}!` = Hello from Vorlias!
 Hello from Vorlias!
 ```
 
