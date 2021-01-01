@@ -3,6 +3,7 @@ import path from "path";
 import ts, { factory } from "typescript";
 import fs from "fs";
 import { transformToInlineDebugPrint, transformToIIFEDebugPrint } from "./dbg";
+import { transformPrint, transformWarning } from "./print";
 
 const sourceText = fs.readFileSync(path.join(__dirname, "..", "index.d.ts"), "utf8");
 function isModule(sourceFile: ts.SourceFile) {
@@ -73,6 +74,12 @@ function handleDebugCallExpression(
 					: factory.createEmptyStatement();
 			}
 			return enabled ? transformToIIFEDebugPrint(expression) : expression;
+		}
+		case "$print": {
+			return enabled ? transformPrint(node) : factory.createEmptyStatement();
+		}
+		case "$warn": {
+			return enabled ? transformWarning(node) : factory.createEmptyStatement();
 		}
 		default:
 			throw `function ${functionName} cannot be handled by this version of rbxts-transform-debug`;

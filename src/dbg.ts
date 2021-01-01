@@ -1,19 +1,13 @@
 import path from "path";
 import ts, { factory } from "typescript";
+import { createExpressionDebugPrefixLiteral } from "./shared";
 
 function createPrintCallExpression(args: ts.Expression[]) {
 	return factory.createCallExpression(factory.createIdentifier("print"), undefined, args);
 }
 
-function createDbgPrefix(node: ts.Node) {
-	const sourceFile = node.getSourceFile();
-	const linePos = sourceFile.getLineAndCharacterOfPosition(node.getStart());
-	const relativePath = path.relative(process.cwd(), node.getSourceFile().fileName).replace(/\\/g, "/");
-	return factory.createStringLiteral(`[${relativePath}:${linePos.line + 1}] ${node.getText()} =`, true);
-}
-
 export function transformToInlineDebugPrint(node: ts.Expression): ts.Expression {
-	return createPrintCallExpression([createDbgPrefix(node), node]);
+	return createPrintCallExpression([createExpressionDebugPrefixLiteral(node), node]);
 }
 
 export function transformToIIFEDebugPrint(argument: ts.Expression): ts.Expression {
@@ -28,7 +22,7 @@ export function transformToIIFEDebugPrint(argument: ts.Expression): ts.Expressio
 				undefined,
 				factory.createBlock(
 					[
-						factory.createExpressionStatement(createPrintCallExpression([createDbgPrefix(argument), id])),
+						factory.createExpressionStatement(createPrintCallExpression([createExpressionDebugPrefixLiteral(argument), id])),
 						factory.createReturnStatement(id),
 					],
 					true,
