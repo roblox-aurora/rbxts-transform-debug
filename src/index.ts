@@ -10,7 +10,7 @@ function isModule(sourceFile: ts.SourceFile) {
 	return sourceFile.text === sourceText;
 }
 
-function isModuleImportExpression(node: ts.Node, program: ts.Program) {
+function isModuleImportExpression(node: ts.Node, program: ts.Program): node is ts.ImportDeclaration {
 	if (!ts.isImportDeclaration(node)) {
 		return false;
 	}
@@ -61,19 +61,20 @@ function visitNodeAndChildren(
 function handleDebugCallExpression(
 	node: ts.CallExpression,
 	functionName: string,
+	program: ts.Program,
 	{ enabled }: DebugTransformConfiguration,
 ) {
 	switch (functionName) {
 		case "$dbg": {
-			const [expression] = node.arguments;
-			if (ts.isExpressionStatement(node.parent)) {
+			const [expression, customHandler] = node.arguments;
+			if (ts.isExpressionStatement(node.parent) && customHandler === undefined) {
 				return enabled
 					? transformToInlineDebugPrint(expression)
 					: ts.isCallExpression(expression)
 					? expression
 					: factory.createEmptyStatement();
 			}
-			return enabled ? transformToIIFEDebugPrint(expression) : expression;
+			return enabled ? transformToIIFEDebugPrint(expression, customHandler, program) : expression;
 		}
 		case "$print": {
 			return enabled ? transformPrint(node) : factory.createEmptyStatement();
@@ -102,7 +103,7 @@ function visitCallExpression(node: ts.CallExpression, program: ts.Program, confi
 		return node;
 	}
 
-	return handleDebugCallExpression(node, functionName, config);
+	return handleDebugCallExpression(node, functionName, program, config);
 }
 
 function visitNode(node: ts.SourceFile, program: ts.Program, config: DebugTransformConfiguration): ts.SourceFile;
@@ -113,6 +114,12 @@ function visitNode(
 	config: DebugTransformConfiguration,
 ): ts.Node | ts.Node[] | undefined {
 	if (isModuleImportExpression(node, program)) {
+		const { importClause } = node;
+
+		if (importClause !== undefined && importClause.isTypeOnly) {
+			return node;
+		}
+
 		return factory.createExportDeclaration(
 			undefined,
 			undefined,

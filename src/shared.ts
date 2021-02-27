@@ -12,6 +12,17 @@ export function createExpressionDebugPrefixLiteral(node: ts.Node): ts.StringLite
 	return factory.createStringLiteral(`[${relativePath}:${linePos.line + 1}] ${node.getText()} =`, true);
 }
 
+export function getDebugInfo(node: ts.Node) {
+	const sourceFile = node.getSourceFile();
+	const linePos = sourceFile.getLineAndCharacterOfPosition(node.getStart());
+	const relativePath = path.relative(process.cwd(), node.getSourceFile().fileName).replace(/\\/g, "/");
+	return {
+		sourceFile,
+		linePos: linePos.line + 1,
+		relativePath,
+	};
+}
+
 /**
  * Creates a debug prefix string literal
  * `[<filePath>:<lineNumber>]`
