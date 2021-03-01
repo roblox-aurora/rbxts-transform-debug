@@ -4,6 +4,9 @@ import ts, { factory } from "typescript";
 import fs from "fs";
 import { transformToInlineDebugPrint, transformToIIFEDebugPrint } from "./dbg";
 import { transformPrint, transformWarning } from "./print";
+import { formatTransformerDebug, formatTransformerDiagnostic, formatTransformerWarning } from "./shared";
+import chalk from "chalk";
+import { transformNameOf } from "./nameof";
 
 const sourceText = fs.readFileSync(path.join(__dirname, "..", "index.d.ts"), "utf8");
 function isModule(sourceFile: ts.SourceFile) {
@@ -58,14 +61,23 @@ function visitNodeAndChildren(
 	);
 }
 
+const MacroFunctionName = {
+	dbg: "$dbg",
+	print: "$print",
+	warn: "$warn",
+	nameof: "$nameof",
+} as const;
+
 function handleDebugCallExpression(
 	node: ts.CallExpression,
 	functionName: string,
 	program: ts.Program,
-	{ enabled }: DebugTransformConfiguration,
+	{ enabled, verbose }: DebugTransformConfiguration,
 ) {
+	if (verbose) console.log(formatTransformerDebug("Handling call to macro " + chalk.yellow(functionName), node));
+
 	switch (functionName) {
-		case "$dbg": {
+		case MacroFunctionName.dbg: {
 			const [expression, customHandler] = node.arguments;
 			if (ts.isExpressionStatement(node.parent) && customHandler === undefined) {
 				return enabled
@@ -76,14 +88,29 @@ function handleDebugCallExpression(
 			}
 			return enabled ? transformToIIFEDebugPrint(expression, customHandler, program) : expression;
 		}
-		case "$print": {
+		case MacroFunctionName.print: {
 			return enabled ? transformPrint(node) : factory.createEmptyStatement();
 		}
-		case "$warn": {
+		case MacroFunctionName.warn: {
 			return enabled ? transformWarning(node) : factory.createEmptyStatement();
 		}
+		case MacroFunctionName.nameof: {
+			if (ts.isExpressionStatement(node.parent)) {
+				console.log(
+					formatTransformerWarning(
+						`Call to ${node.getText()}, which is not used anywhere. It has been stripped.`,
+						node,
+					),
+				);
+				return factory.createEmptyStatement();
+			} else {
+				return transformNameOf(node, program);
+			}
+		}
 		default:
-			throw `function ${functionName} cannot be handled by this version of rbxts-transform-debug`;
+			throw formatTransformerDiagnostic(
+				`function ${chalk.yellow(functionName)} cannot be handled by this version of rbxts-transform-debug`,
+			);
 	}
 }
 
@@ -157,6 +184,12 @@ export default function transform(program: ts.Program, userConfiguration: DebugT
 				userConfiguration.enabled = false;
 			}
 		}
+	}
+
+	if (userConfiguration.verbose) {
+		// eslint-disable-next-line @typescript-eslint/no-var-requires
+		console.log(formatTransformerDebug("Running version " + require("../package.json").version));
+		console.log(formatTransformerDebug(`Macros enabled: ${chalk.cyan(userConfiguration.enabled)}`));
 	}
 
 	return (context: ts.TransformationContext) => (file: ts.SourceFile) =>

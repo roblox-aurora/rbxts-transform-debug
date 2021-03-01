@@ -39,3 +39,14 @@ export function $print(...params: unknown[]): void;
  * This can be optionally enabled/disabled in emit using `enabled` and `environmentRequires`.
  */
 export function $warn(...params: unknown[]): void;
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+
+/**
+ * A macro that gets replaced with the specified type or value
+ * @param T An interface, type or class type
+ * @param value A value of which to get the name for
+ */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export function $nameof<T>(): string;
+export function $nameof(value: unknown): string;

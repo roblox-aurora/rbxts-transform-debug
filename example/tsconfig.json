@@ -22,6 +22,8 @@
 		"plugins": [
 			{
 				"transform": "rbxts-transform-debug",
+				"enabled": true,
+				"verbose": true,
 				"environmentRequires": {
 					//"NODE_ENV": "development"
 				},
