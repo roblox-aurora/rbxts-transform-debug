@@ -52,6 +52,7 @@ export function createDebugObject(expression: ts.Expression): ts.ObjectLiteralEx
 export function createCustomIIFEBlock(
 	expression: ts.Expression,
 	body: ts.ConciseBody,
+	sourceId: ts.Identifier,
 	debugInfoParam: ts.ParameterDeclaration | undefined,
 ): ts.Block {
 	if (ts.isBlock(body)) {
@@ -77,6 +78,7 @@ export function createCustomIIFEBlock(
 			);
 		}
 
+		newBody.push(factory.createReturnStatement(sourceId));
 		return factory.createBlock(newBody);
 	} else {
 		const id = factory.createIdentifier("value");
@@ -89,14 +91,13 @@ export function transformToIIFEDebugPrint(
 	customHandler: ts.Expression,
 	program: ts.Program,
 ): ts.Expression {
-	const id = factory.createIdentifier("value");
-
 	if (customHandler) {
 		if (ts.isArrowFunction(customHandler) || ts.isFunctionExpression(customHandler)) {
 			const {
 				body,
-				parameters: [, debugInfo],
+				parameters: [sourceParam, debugInfo],
 			} = customHandler;
+			const valueId = factory.createIdentifier(sourceParam.name.getText());
 
 			const checker = program.getTypeChecker();
 			const methodSignature = checker.getSignatureFromDeclaration(customHandler);
@@ -125,17 +126,19 @@ export function transformToIIFEDebugPrint(
 					factory.createArrowFunction(
 						undefined,
 						undefined,
-						[factory.createParameterDeclaration(undefined, undefined, undefined, id)],
+						[factory.createParameterDeclaration(undefined, undefined, undefined, valueId)],
 						undefined,
 						undefined,
-						createCustomIIFEBlock(expression, body, debugInfo),
+						createCustomIIFEBlock(expression, body, valueId, debugInfo),
 					),
 				),
 				undefined,
 				[expression],
 			);
 		} else if (ts.isIdentifier(customHandler) || ts.isPropertyAccessExpression(customHandler)) {
+			const id = factory.createUniqueName("value");
 			const tmp = factory.createUniqueName("debugInfo");
+
 			return factory.createCallExpression(
 				factory.createParenthesizedExpression(
 					factory.createArrowFunction(
@@ -177,6 +180,8 @@ export function transformToIIFEDebugPrint(
 			);
 		}
 	} else {
+		const id = factory.createUniqueName("value");
+
 		return factory.createCallExpression(
 			factory.createParenthesizedExpression(
 				factory.createArrowFunction(
