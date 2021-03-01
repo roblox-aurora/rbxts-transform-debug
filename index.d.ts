@@ -13,8 +13,6 @@ export interface $DebugInfo {
 	rawText: string;
 }
 
-type $DefaultIfVoid<TVoidable, TDefault> = TVoidable extends void ? TDefault : TVoidable;
-
 /**
  * Creates a debug print for the supplied expression
  *
@@ -25,7 +23,7 @@ type $DefaultIfVoid<TVoidable, TDefault> = TVoidable extends void ? TDefault : T
  * @param customHandler A custom IIFE handler for debugging this expression
  */
 export function $dbg<T>(expression: T): T;
-export function $dbg<T>(expression: T, customHandler: (value: Readonly<T>, debug: $DebugInfo) => T | void): T;
+export function $dbg<T>(expression: T, customHandler: (value: Readonly<T>, debug: $DebugInfo) => void): T;
 /**
  * Same as `print`, but includes the source information
  * Will be prefixed with something like `[src/shared/module.ts:11]`

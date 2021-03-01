@@ -1,6 +1,6 @@
 import path from "path";
 import ts, { factory } from "typescript";
-import { createExpressionDebugPrefixLiteral, getDebugInfo } from "./shared";
+import { createExpressionDebugPrefixLiteral, formatTransformerDiagnostic, getDebugInfo } from "./shared";
 
 function createPrintCallExpression(args: ts.Expression[]) {
 	return factory.createCallExpression(factory.createIdentifier("print"), undefined, args);
@@ -10,6 +10,11 @@ export function transformToInlineDebugPrint(node: ts.Expression): ts.Expression 
 	return createPrintCallExpression([createExpressionDebugPrefixLiteral(node), node]);
 }
 
+/**
+ * Creates a IIFE debug expression
+ * @param id The identifier
+ * @param argument The expression
+ */
 export function createIIFEBlock(id: ts.Identifier, argument: ts.Expression): ts.Block {
 	return factory.createBlock(
 		[
@@ -22,6 +27,10 @@ export function createIIFEBlock(id: ts.Identifier, argument: ts.Expression): ts.
 	);
 }
 
+/**
+ * Creates an object with debug information about the specified expression
+ * @param expression The expression
+ */
 export function createDebugObject(expression: ts.Expression): ts.ObjectLiteralExpression {
 	const info = getDebugInfo(expression);
 	return factory.createObjectLiteralExpression(
@@ -34,21 +43,20 @@ export function createDebugObject(expression: ts.Expression): ts.ObjectLiteralEx
 	);
 }
 
+/**
+ * Creates a custom IIFE block based on user input
+ * @param expression
+ * @param body
+ * @param debugInfoParam
+ */
 export function createCustomIIFEBlock(
 	expression: ts.Expression,
 	body: ts.ConciseBody,
-	valueParam: ts.ParameterDeclaration,
 	debugInfoParam: ts.ParameterDeclaration | undefined,
 ): ts.Block {
-	const newBody = ts.isBlock(body)
-		? [...body.statements]
-		: [
-				factory.createExpressionStatement(
-					createPrintCallExpression([createExpressionDebugPrefixLiteral(expression), expression]),
-				),
-				// factory.createReturnStatement(body),
-		  ];
-	if (newBody) {
+	if (ts.isBlock(body)) {
+		const newBody = [...body.statements];
+
 		if (debugInfoParam !== undefined) {
 			newBody.unshift(
 				factory.createVariableStatement(
@@ -68,12 +76,12 @@ export function createCustomIIFEBlock(
 				),
 			);
 		}
-	}
-	
-	return factory.createBlock(newBody);
 
-	// const id = factory.createIdentifier("value");
-	// return createIIFEBlock(id, expression);
+		return factory.createBlock(newBody);
+	} else {
+		const id = factory.createIdentifier("value");
+		return createIIFEBlock(id, expression);
+	}
 }
 
 export function transformToIIFEDebugPrint(
@@ -87,8 +95,30 @@ export function transformToIIFEDebugPrint(
 		if (ts.isArrowFunction(customHandler) || ts.isFunctionExpression(customHandler)) {
 			const {
 				body,
-				parameters: [source, debugInfo],
+				parameters: [, debugInfo],
 			} = customHandler;
+
+			const checker = program.getTypeChecker();
+			const methodSignature = checker.getSignatureFromDeclaration(customHandler);
+			if (methodSignature) {
+				const returnType = methodSignature.getReturnType();
+				const returnSymbol = returnType.getSymbol();
+				if (returnSymbol) {
+					throw formatTransformerDiagnostic(
+						`argument 'customHandler' should return void, got ${returnSymbol.getName()}`,
+						customHandler,
+					);
+				} else {
+					// I don't know if there's any other sane way here.
+					const typeString = checker.typeToString(returnType);
+					if (typeString !== "void") {
+						throw formatTransformerDiagnostic(
+							`argument 'customHandler' should return void, got ${typeString}`,
+							customHandler,
+						);
+					}
+				}
+			}
 
 			return factory.createCallExpression(
 				factory.createParenthesizedExpression(
@@ -98,7 +128,7 @@ export function transformToIIFEDebugPrint(
 						[factory.createParameterDeclaration(undefined, undefined, undefined, id)],
 						undefined,
 						undefined,
-						createCustomIIFEBlock(expression, body, source, debugInfo),
+						createCustomIIFEBlock(expression, body, debugInfo),
 					),
 				),
 				undefined,
@@ -141,7 +171,10 @@ export function transformToIIFEDebugPrint(
 				[expression],
 			);
 		} else {
-			throw `[rbxts-transform-debug] ${ts.SyntaxKind[customHandler.kind]} not supported in custom $dbg handler`;
+			throw formatTransformerDiagnostic(
+				`${ts.SyntaxKind[customHandler.kind]} not supported in custom $dbg handler`,
+				customHandler,
+			);
 		}
 	} else {
 		return factory.createCallExpression(

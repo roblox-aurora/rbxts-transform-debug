@@ -23,7 +23,7 @@
 			{
 				"transform": "rbxts-transform-debug",
 				"environmentRequires": {
-					"NODE_ENV": "development"
+					//"NODE_ENV": "development"
 				},
 			}
 		]
