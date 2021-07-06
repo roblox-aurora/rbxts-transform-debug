@@ -64,8 +64,8 @@ export function transformGit(expression: ts.CallExpression): ts.AsExpression {
 
 	const properties = [
 		factory.createPropertyAssignment("Branch", factory.createStringLiteral(branch)),
-		factory.createPropertyAssignment("CommitHash", factory.createStringLiteral(commit.substr(0, 7))),
-		factory.createPropertyAssignment("CommitFullHash", factory.createStringLiteral(commit)),
+		factory.createPropertyAssignment("Commit", factory.createStringLiteral(commit.substr(0, 7))),
+		factory.createPropertyAssignment("CommitHash", factory.createStringLiteral(commit)),
 		factory.createPropertyAssignment("LatestTag", factory.createStringLiteral(tag ?? "")),
 	];
 

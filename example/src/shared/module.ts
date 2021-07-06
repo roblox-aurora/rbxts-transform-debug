@@ -43,4 +43,4 @@ exampleFunction("Hello, World!");
 // $commitId();
 // $commitId(true);
 
-const {Branch, LatestTag, CommitHash, CommitFullHash} = $git();
+const {Branch, LatestTag, CommitHash, Commit} = $git();

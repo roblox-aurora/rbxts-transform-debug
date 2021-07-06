@@ -67,11 +67,11 @@ export interface $git {
 	/**
 	 * The current short commit hash (7 characters)
 	 */
-	readonly CommitHash: string;
+	readonly Commit: string;
 	/**
 	 * The current full commit hash
 	 */
-	readonly CommitFullHash: string;
+	readonly CommitHash: string;
 	/**
 	 * The latest tag this project has (will be an empty string, if no tags have ever been applied)
 	 */
