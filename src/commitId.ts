@@ -9,7 +9,7 @@ export function transformCommitId(expression: ts.CallExpression): ts.StringLiter
 
 	if (commit === undefined) {
 		try {
-			commit = execSync("gits rev-parse HEAD").toString().replace("\n", "");
+			commit = execSync("git rev-parse HEAD").toString().replace("\n", "");
 		} catch (err) {
 			throw formatTransformerDiagnostic(
 				"Failed to grab git commit hash. Git not in PATH or project is not using git.",
