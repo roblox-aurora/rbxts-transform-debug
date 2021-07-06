@@ -7,7 +7,7 @@ import { transformPrint, transformWarning } from "./print";
 import { formatTransformerDebug, formatTransformerDiagnostic, formatTransformerWarning } from "./shared";
 import chalk from "chalk";
 import { transformNameOf } from "./nameof";
-import { transformCommitId } from "./commitId";
+import { transformCommitId, transformGit } from "./git";
 
 const sourceText = fs.readFileSync(path.join(__dirname, "..", "index.d.ts"), "utf8");
 function isModule(sourceFile: ts.SourceFile) {
@@ -67,6 +67,7 @@ const MacroFunctionName = {
 	print: "$print",
 	warn: "$warn",
 	commitId: "$commitId",
+	git: "$git",
 	nameof: "$nameof",
 } as const;
 
@@ -92,6 +93,9 @@ function handleDebugCallExpression(
 		}
 		case MacroFunctionName.commitId: {
 			return transformCommitId(node);
+		}
+		case MacroFunctionName.git: {
+			return transformGit(node);
 		}
 		case MacroFunctionName.print: {
 			return enabled ? transformPrint(node) : factory.createEmptyStatement();
@@ -150,6 +154,16 @@ function visitNode(
 
 		if (importClause !== undefined && importClause.isTypeOnly) {
 			return node;
+		}
+
+		if (importClause !== undefined) {
+			return factory.updateImportDeclaration(
+				node,
+				undefined,
+				undefined,
+				factory.updateImportClause(importClause, true, importClause.name, importClause.namedBindings),
+				node.moduleSpecifier,
+			);
 		}
 
 		return factory.createExportDeclaration(

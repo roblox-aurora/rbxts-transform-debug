@@ -1,4 +1,4 @@
-import {$dbg, $nameof, $print, $warn, $commitId} from "../../..";
+import {$dbg, $nameof, $print, $warn, $commitId, $git} from "../../..";
 import type {$DebugInfo} from "../../..";
 
 export function makeHello(name: string) {
@@ -40,5 +40,7 @@ function exampleFunction(input: string) {
 // [module.ts:13] exampleFunction(input = Hello, World!)
 exampleFunction("Hello, World!");
 
-$commitId();
-$commitId(true);
+// $commitId();
+// $commitId(true);
+
+const {Branch, LatestTag, CommitHash, CommitFullHash} = $git();

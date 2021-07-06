@@ -55,5 +55,30 @@ export function $nameof(value: unknown): string;
  * Macro that gets replaced with the git commit hash. If the `full` argument is `true`,
  * this will be the full hash, otherwise it will be a 7 character hash.
  * @param full Whether or not to render the full commit hash
+ * @deprecated Use `$git("commit")` or `$git("commit-full")`
  */
 export function $commitId(full?: true): string;
+
+export interface $git {
+	/**
+	 * The name of the branch this project is on
+	 */
+	readonly Branch: string;
+	/**
+	 * The current short commit hash (7 characters)
+	 */
+	readonly CommitHash: string;
+	/**
+	 * The current full commit hash
+	 */
+	readonly CommitFullHash: string;
+	/**
+	 * The latest tag this project has (will be an empty string, if no tags have ever been applied)
+	 */
+	readonly LatestTag: string;
+}
+
+/**
+ * Macro that returns an object containing git information
+ */
+export function $git(): $git;
