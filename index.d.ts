@@ -55,7 +55,7 @@ export function $nameof(value: unknown): string;
  * Macro that gets replaced with the git commit hash. If the `full` argument is `true`,
  * this will be the full hash, otherwise it will be a 7 character hash.
  * @param full Whether or not to render the full commit hash
- * @deprecated Use `$git().CommitHash` or `$git.CommitHashFull`
+ * @deprecated Use `$git().CommitHash` or `$git.CommitFullHash`
  */
 export function $commitId(full?: true): string;
 
