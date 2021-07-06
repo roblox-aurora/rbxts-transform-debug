@@ -50,3 +50,10 @@ export function $warn(...params: unknown[]): void;
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function $nameof<T>(): string;
 export function $nameof(value: unknown): string;
+
+/**
+ * Macro that gets replaced with the git commit hash. If the `full` argument is `true`,
+ * this will be the full hash, otherwise it will be a 7 character hash.
+ * @param full Whether or not to render the full commit hash
+ */
+export function $commitId(full?: true): string;

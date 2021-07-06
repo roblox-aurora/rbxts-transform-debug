@@ -7,6 +7,7 @@ import { transformPrint, transformWarning } from "./print";
 import { formatTransformerDebug, formatTransformerDiagnostic, formatTransformerWarning } from "./shared";
 import chalk from "chalk";
 import { transformNameOf } from "./nameof";
+import { transformCommitId } from "./commitId";
 
 const sourceText = fs.readFileSync(path.join(__dirname, "..", "index.d.ts"), "utf8");
 function isModule(sourceFile: ts.SourceFile) {
@@ -65,6 +66,7 @@ const MacroFunctionName = {
 	dbg: "$dbg",
 	print: "$print",
 	warn: "$warn",
+	commitId: "$commitId",
 	nameof: "$nameof",
 } as const;
 
@@ -87,6 +89,9 @@ function handleDebugCallExpression(
 					: factory.createEmptyStatement();
 			}
 			return enabled ? transformToIIFEDebugPrint(expression, customHandler, program) : expression;
+		}
+		case MacroFunctionName.commitId: {
+			return transformCommitId(node);
 		}
 		case MacroFunctionName.print: {
 			return enabled ? transformPrint(node) : factory.createEmptyStatement();
