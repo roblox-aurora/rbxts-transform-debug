@@ -1,6 +1,6 @@
 {
   "name": "rbxts-transform-debug",
-  "version": "0.6.1",
+  "version": "1.0.0-rc.1",
   "description": "Transformer for debugging things in roblox-ts",
   "main": "out/index.js",
   "scripts": {
@@ -23,7 +23,7 @@
     "colors": "^1.4.0",
     "dotenv": "^8.2.0",
     "execa": "^5.1.1",
-    "typescript": "^4.1.2"
+    "typescript": "=4.3.5"
   },
   "devDependencies": {
     "@rbxts/types": "^1.0.428",

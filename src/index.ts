@@ -30,7 +30,7 @@ function isModuleImportExpression(node: ts.Node, program: ts.Program): node is t
 
 	const importSymbol = program.getTypeChecker().getSymbolAtLocation(node.moduleSpecifier);
 
-	if (!importSymbol || !isModule(importSymbol.valueDeclaration.getSourceFile())) {
+	if (!importSymbol || !importSymbol.valueDeclaration || !isModule(importSymbol.valueDeclaration.getSourceFile())) {
 		return false;
 	}
 
@@ -87,7 +87,7 @@ function handleDebugCallExpression(
 					? transformToInlineDebugPrint(expression)
 					: ts.isCallExpression(expression)
 					? expression
-					: factory.createEmptyStatement();
+					: factory.createVoidExpression(factory.createIdentifier("undefined"));
 			}
 			return enabled ? transformToIIFEDebugPrint(expression, customHandler, program) : expression;
 		}
@@ -98,10 +98,12 @@ function handleDebugCallExpression(
 			return transformGit(node);
 		}
 		case MacroFunctionName.print: {
-			return enabled ? transformPrint(node) : factory.createEmptyStatement();
+			return enabled ? transformPrint(node) : factory.createVoidExpression(factory.createIdentifier("undefined"));
 		}
 		case MacroFunctionName.warn: {
-			return enabled ? transformWarning(node) : factory.createEmptyStatement();
+			return enabled
+				? transformWarning(node)
+				: factory.createVoidExpression(factory.createIdentifier("undefined"));
 		}
 		case MacroFunctionName.nameof: {
 			if (ts.isExpressionStatement(node.parent)) {
@@ -111,7 +113,7 @@ function handleDebugCallExpression(
 						node,
 					),
 				);
-				return factory.createEmptyStatement();
+				return factory.createVoidExpression(factory.createIdentifier("undefined"));
 			} else {
 				return transformNameOf(node, program);
 			}
