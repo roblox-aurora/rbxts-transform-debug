@@ -17,7 +17,7 @@ export function transformCommitId(expression: ts.CallExpression): ts.StringLiter
 			throw formatTransformerDiagnostic(
 				"Failed to grab git commit hash. Git not in PATH or project is not using git.",
 				expression,
-				err,
+				err as string,
 			);
 		}
 	}
@@ -37,7 +37,7 @@ export function transformGit(expression: ts.CallExpression): ts.AsExpression {
 			throw formatTransformerDiagnostic(
 				"Failed to grab git info. Git not in PATH or project is not using git.",
 				expression,
-				err,
+				err as string,
 			);
 		}
 	}
@@ -49,7 +49,7 @@ export function transformGit(expression: ts.CallExpression): ts.AsExpression {
 			throw formatTransformerDiagnostic(
 				"Failed to grab git info. Git not in PATH or project is not using git.",
 				expression,
-				err,
+				err as string,
 			);
 		}
 	}
