@@ -165,6 +165,7 @@ function visitNode(
 				undefined,
 				factory.updateImportClause(importClause, true, importClause.name, importClause.namedBindings),
 				node.moduleSpecifier,
+				undefined,
 			);
 		}
 
