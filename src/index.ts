@@ -8,6 +8,7 @@ import { formatTransformerDebug, formatTransformerDiagnostic, formatTransformerW
 import chalk from "chalk";
 import { transformNameOf } from "./nameof";
 import { transformCommitId, transformGit } from "./git";
+import { transformTime } from "./time";
 
 const sourceText = fs.readFileSync(path.join(__dirname, "..", "index.d.ts"), "utf8");
 function isModule(sourceFile: ts.SourceFile) {
@@ -69,6 +70,7 @@ const MacroFunctionName = {
 	commitId: "$commitId",
 	git: "$git",
 	nameof: "$nameof",
+	time: "$compileTime",
 } as const;
 
 function handleDebugCallExpression(
@@ -118,6 +120,8 @@ function handleDebugCallExpression(
 				return transformNameOf(node, program);
 			}
 		}
+		case MacroFunctionName.time:
+			return transformTime(node);
 		default:
 			throw formatTransformerDiagnostic(
 				`function ${chalk.yellow(functionName)} cannot be handled by this version of rbxts-transform-debug`,
