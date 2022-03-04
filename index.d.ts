@@ -72,7 +72,7 @@ export interface $git {
 	/**
 	 * The ISO-formatted date time of the current commit
 	 */
-	readonly DateTime: string;
+	readonly ISODate: string;
 
 	/**
 	 * The unix timestamp of this commit

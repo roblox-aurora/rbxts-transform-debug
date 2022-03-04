@@ -41,7 +41,7 @@ function exampleFunction(input: string) {
 exampleFunction("Hello, World!");
 
 const git = $git();
-const dateStuff = $git("DateTime", "Timestamp")
+const dateStuff = $git("ISODate", "Timestamp")
 $compileTime()
 $compileTime("DateTime")
 $compileTime("ISO-8601")

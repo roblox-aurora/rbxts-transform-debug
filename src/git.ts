@@ -45,7 +45,7 @@ export function stringArgsToSet<K extends string = string>(
 }
 
 type ValueOf<T> = T[keyof T];
-const keys = ["Commit", "Branch", "CommitHash", "LatestTag", "DateTime", "Timestamp"] as const;
+const keys = ["Commit", "Branch", "CommitHash", "LatestTag", "ISODate", "Timestamp"] as const;
 
 export function transformGit(expression: ts.CallExpression): ts.AsExpression {
 	let toInclude: ReadonlySet<ValueOf<typeof keys>> = new Set(keys);
@@ -119,10 +119,10 @@ export function transformGit(expression: ts.CallExpression): ts.AsExpression {
 		properties.push(factory.createPropertyAssignment("LatestTag", factory.createStringLiteral(tag)));
 	}
 
-	if (toInclude.has("DateTime")) {
+	if (toInclude.has("ISODate")) {
 		properties.push(
 			factory.createPropertyAssignment(
-				"DateTime",
+				"ISODate",
 				factory.createStringLiteral(dateString ?? new Date().toISOString()),
 			),
 		);
