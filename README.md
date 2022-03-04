@@ -70,6 +70,24 @@ local value = (function(value)
 	return value
 end)(test())
 ```
+
+## `$git`
+Generates an object with git information. If you pass property names to it, it will filter out the object's properties.
+- ### `.ISODate` - An ISO-8601 formatted date of the date and time of the commit when the code was compiled
+- ### `.Timestamp` - A unix timestamp of the commit when the code was compiled
+- ### `.LatestTag` - The latest tag being used (e.g. `v1.1.0`) when this code was compiled
+- ### `.CommitHash` - The full commit hash (e.g. `342db0bd208658f52a8464ace298765c04a3a78b`) this code was compiled on
+- ### `.Commit` - The commit hash in seven characters (e.g. `342db0b`) this code was compiled on
+- ### `.Branch` - The name of the branch this was compiled on
+
+## `$compileTime`
+Emits an expression representing the current compile time, if no arguments are specified - this is the unix timestamp.
+Accepts:
+- `"DateTime"` - Will emit a `DateTime` object representing the compile time
+- `"UnixTimestamp"` - Will emit the compile time as a unix timestamp (default)
+- `"UnixTimestampMillis"` - Will emit the compile time as unix timestamp in milliseconds
+- `"ISO-8601"` - Will emit the compile time as an ISO-8601 compatible date/time string
+
 ## `$print`
 Same as `print`, but will prefix the print with the file name + line number. Also controlled by the below settings as to whether or not it's emitted.
 

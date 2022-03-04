@@ -68,9 +68,44 @@ export interface $git {
 	 * The latest tag this project has (will be an empty string, if no tags have ever been applied)
 	 */
 	readonly LatestTag: string;
+
+	/**
+	 * The ISO-formatted date time of the current commit
+	 */
+	readonly ISODate: string;
+
+	/**
+	 * The unix timestamp of this commit
+	 */
+	readonly Timestamp: number;
+}
+
+type $GitProps<K extends keyof $git> = Pick<$git, K>;
+
+/**
+ * Macro that returns an object containing all the git information
+ */
+export function $git(): $git;
+
+/**
+ * Macro that returns an object containing specified git properties
+ * @param props The properties to filter out
+ */
+export function $git<K extends keyof $git>(...props: K[]): $GitProps<K>;
+
+interface CompileTimeKind {
+	DateTime: DateTime;
+	UnixTimestamp: number;
+	UnixTimestampMillis: number;
+	["ISO-8601"]: string;
 }
 
 /**
- * Macro that returns an object containing git information
+ * Returns the unix timestamp of the time the code was compiled
  */
-export function $git(): $git;
+export function $compileTime(): number;
+/**
+ * Returns an expression of the compile time based on the output kind
+ * @param outputAs The kind of expression to output representing the compile time
+ */
+export function $compileTime<TKind extends keyof CompileTimeKind>(outputAs: TKind): CompileTimeKind[TKind];

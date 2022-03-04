@@ -1,4 +1,4 @@
-import {$dbg, $nameof, $print, $warn, $commitId, $git} from "../../..";
+import {$dbg, $nameof, $print, $warn, $git, $compileTime} from "../../..";
 import type {$DebugInfo} from "../../..";
 
 export function makeHello(name: string) {
@@ -31,7 +31,7 @@ function exampleFunction(input: string) {
 			source.lineNumber
 		}] ${$nameof(exampleFunction)}(${
 			source.rawText
-		} = ${
+		} = ${ 
 			value
 		})`);
 	})
@@ -40,7 +40,10 @@ function exampleFunction(input: string) {
 // [module.ts:13] exampleFunction(input = Hello, World!)
 exampleFunction("Hello, World!");
 
-// $commitId();
-// $commitId(true);
-
-const {Branch, LatestTag, CommitHash, Commit} = $git();
+const git = $git();
+const dateStuff = $git("ISODate", "Timestamp")
+$compileTime()
+$compileTime("DateTime")
+$compileTime("ISO-8601")
+$compileTime("UnixTimestampMillis")
+$compileTime("UnixTimestamp")
