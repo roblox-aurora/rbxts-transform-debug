@@ -2,7 +2,7 @@
 import ts from "typescript";
 import { factory } from "typescript";
 import { CALL_MACROS } from "../transform/macros/call";
-import { PROPERTY_MACROS } from "../transform/macros/literal";
+import { PROPERTY_MACROS } from "../transform/macros/property";
 import { CallMacro, PropertyMacro } from "../transform/macros/macro";
 import { GitStatusProvider } from "./gitStatusProvider";
 import { PackageJsonProvider } from "./packageJsonProvider";
