@@ -1,4 +1,4 @@
-import { $compileTime, $dbg, $git, $nameof, $package, $print, $warn } from "../../..";
+import { $compileTime, $dbg, $file, $git, $nameof, $package, $print, $warn } from "../../..";
 
 export function makeHello(name: string) {
 	return (`Hello from ${name}!`);
@@ -22,8 +22,17 @@ interface TestInterface {
 $nameof<TestInterface>();
 
 
-// const test = $package.devDependencies!["test"];
-// $print($package["name"]);
-print($dbg("hi there"));
+$print($package.name, "is version", $package.version, "with a description of", $package.description);
 
-$dbg(10 > 30, (name, debugInfo) => {})
+for (const [depName, depVersion] of pairs($package.dependencies)) {
+	$print($package.name, "dependency", depName, depVersion);
+}
+
+for (const [depName, depVersion] of pairs($package.devDependencies)) {
+	$print($package.name, "devDependency", depName, depVersion);
+}
+
+const versionOfCompilerTypes = $package.devDependencies?.["@rbxts/compiler-types"];
+$print(versionOfCompilerTypes);
+$print($file.lineNumber, $file.filePath);
+$compileTime();

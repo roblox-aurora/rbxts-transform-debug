@@ -1,7 +1,9 @@
 import assert from "assert";
+import { PackageJson } from "types-package-json";
 import ts, { factory } from "typescript";
 import { PackageJsonProvider } from "../../../class/packageJsonProvider";
 import { TransformState } from "../../../class/transformState";
+import { formatTransformerDiagnostic } from "../../../shared";
 import { toExpression } from "../../../util/toAst";
 import { PropertyMacro } from "../macro";
 
@@ -20,7 +22,21 @@ function getRelativePath(
 	}
 }
 
-const symbolCache = new Map<ts.Symbol, ts.Node>();
+function resolveName(value: ts.PropertyAccessExpression | ts.ElementAccessExpression) {
+	if (ts.isPropertyAccessExpression(value)) {
+		return value.name;
+	} else {
+		if (ts.isIdentifier(value.argumentExpression)) {
+			return value.argumentExpression;
+		} else {
+			throw formatTransformerDiagnostic(
+				"Invalid macro access",
+				value,
+				"Try using a literal to access this property.",
+			);
+		}
+	}
+}
 
 export const PackagePropertyMacro: PropertyMacro = {
 	getSymbol(state: TransformState) {
@@ -29,33 +45,28 @@ export const PackagePropertyMacro: PropertyMacro = {
 		return mod;
 	},
 	transform(state: TransformState, node: ts.PropertyAccessExpression | ts.ElementAccessExpression) {
+		const packageSymbol = state.symbolProvider.moduleFile?.get("$package");
+		assert(packageSymbol);
 		const packageJson = state.packageJsonProvider;
 
-		const parentPath = getRelativePath(state, packageJson, node.expression);
+		console.log(ts.SyntaxKind[node.parent.kind], node.parent.getText());
 
-		if (ts.isPropertyAccessExpression(node)) {
-			const rhs = node.name;
+		const name = resolveName(node);
 
-			const value: unknown = parentPath?.[rhs.text as never];
-
-			const retExpression = toExpression(value);
-
+		if (ts.isPropertyAccessExpression(node.parent)) {
+		} else {
+			const value = packageJson.queryField(name.text as keyof PackageJson);
 			if (typeof value === "object") {
-				const id = factory.createUniqueName(rhs.text);
-				state.prereq(
-					factory.createVariableStatement(
-						undefined,
-						factory.createVariableDeclarationList(
-							[factory.createVariableDeclaration(id, undefined, undefined, retExpression)],
-							ts.NodeFlags.Const,
-						),
-					),
-				);
-
-				return id;
+				const id = factory.createUniqueName(name.text);
+				const expression = toExpression(value, name.text);
+				if (expression) {
+					state.prereqDeclaration(id, expression);
+					return id;
+				}
 			} else {
-				if (retExpression !== undefined) {
-					return retExpression;
+				const expression = toExpression(value, name.text);
+				if (expression) {
+					return expression;
 				}
 			}
 		}

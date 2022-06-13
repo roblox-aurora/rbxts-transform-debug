@@ -9,13 +9,47 @@ import { PackageJson } from "types-package-json";
  * ```
  * to get around the import stripping
  */
-export interface $DebugInfo {
-	file: string;
-	lineNumber: number;
-	rawText: string;
+export interface DbgExpressionInfo {
+	/**
+	 * The current file of this expression
+	 */
+	readonly file: string;
+	/**
+	 * The line number where the expression is
+	 */
+	readonly lineNumber: number;
+	/**
+	 * The raw text of the expression
+	 */
+	readonly rawText: string;
 }
 
+/** @deprecated */
+export type $DebugInfo = DbgExpressionInfo;
+
+export interface FileInfo {
+	/**
+	 * The current file's path
+	 */
+	readonly filePath: string;
+	/**
+	 * The line number of this expression
+	 */
+	readonly lineNumber: number;
+}
+
+/**
+ * Contains properties in your `package.json` such as `$package.version` being the version.
+ */
 export declare const $package: PackageJson;
+
+/**
+ * Contains information about the current file
+ *
+ * - `lineNumber` - will use the current line number of the macro
+ * - `filePath` - will be the relative path of your file, relative to the root directory
+ */
+export declare const $file: FileInfo;
 
 /**
  * Creates a debug print for the supplied expression
@@ -27,7 +61,7 @@ export declare const $package: PackageJson;
  * @param customHandler A custom IIFE handler for debugging this expression
  */
 export function $dbg<T>(expression: T): T;
-export function $dbg<T>(expression: T, customHandler: (value: Readonly<T>, debug: $DebugInfo) => void): T;
+export function $dbg<T>(expression: T, customHandler: (value: Readonly<T>, debug: DbgExpressionInfo) => void): T;
 /**
  * Same as `print`, but includes the source information
  * Will be prefixed with something like `[src/shared/module.ts:11]`

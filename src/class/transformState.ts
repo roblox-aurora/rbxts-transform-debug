@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
-import assert from "assert";
 import ts from "typescript";
 import { factory } from "typescript";
 import { CALL_MACROS } from "../transform/macros/call";
@@ -24,6 +23,8 @@ export class TransformState {
 	public readonly typeChecker: ts.TypeChecker;
 	public readonly options = this.program.getCompilerOptions();
 	public readonly srcDir = this.options.rootDir ?? this.program.getCurrentDirectory();
+	public readonly baseDir = this.options.baseUrl ?? this.options.configFilePath ?? this.program.getCurrentDirectory();
+	public readonly tsconfigFile = this.options.configFilePath ?? this.program.getCurrentDirectory();
 
 	public readonly symbolProvider: SymbolProvider;
 	public readonly gitProvider: GitStatusProvider;
@@ -38,6 +39,7 @@ export class TransformState {
 		this.symbolProvider = new SymbolProvider(this);
 		this.gitProvider = new GitStatusProvider(this);
 		this.packageJsonProvider = new PackageJsonProvider(this);
+
 		this.initMacros();
 	}
 
@@ -87,6 +89,7 @@ export class TransformState {
 	}
 
 	private prereqStack = new Array<Array<ts.Statement>>();
+
 	public capture<T>(cb: () => T): [T, ts.Statement[]] {
 		this.prereqStack.push([]);
 		const result = cb();

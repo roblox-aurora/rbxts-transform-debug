@@ -11,7 +11,7 @@ export function transformStatementList(state: TransformState, statements: Readon
 	for (const statement of statements) {
 		const [newStatements, prereqs] = state.capture(() => transformStatement(state, statement));
 
-		result.push(...prereqs);
+		result.push(...prereqs.map((prereq) => transformStatement(state, prereq)));
 		result.push(...getNodeList(newStatements));
 	}
 
