@@ -51,21 +51,19 @@ export const PackagePropertyMacro: PropertyMacro = {
 
 		const name = resolveName(node);
 
-		if (ts.isPropertyAccessExpression(node.parent)) {
+		const value = packageJson.queryField(name.text as keyof PackageJson);
+
+		if (typeof value === "object") {
+			const id = factory.createUniqueName(name.text);
+			const expression = toExpression(value, name.text);
+			if (expression) {
+				state.prereqDeclaration(id, expression);
+				return id;
+			}
 		} else {
-			const value = packageJson.queryField(name.text as keyof PackageJson);
-			if (typeof value === "object") {
-				const id = factory.createUniqueName(name.text);
-				const expression = toExpression(value, name.text);
-				if (expression) {
-					state.prereqDeclaration(id, expression);
-					return id;
-				}
-			} else {
-				const expression = toExpression(value, name.text);
-				if (expression) {
-					return expression;
-				}
+			const expression = toExpression(value, name.text);
+			if (expression) {
+				return expression;
 			}
 		}
 

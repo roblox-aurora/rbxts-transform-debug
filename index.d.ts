@@ -38,10 +38,14 @@ export interface FileInfo {
 	readonly lineNumber: number;
 }
 
+export interface PackageJsonInfo extends Readonly<PackageJson> {
+	readonly [value: string]: unknown;
+}
+
 /**
  * Contains properties in your `package.json` such as `$package.version` being the version.
  */
-export declare const $package: PackageJson;
+export declare const $package: PackageJsonInfo;
 
 /**
  * Contains information about the current file

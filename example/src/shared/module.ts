@@ -36,3 +36,6 @@ const versionOfCompilerTypes = $package.devDependencies?.["@rbxts/compiler-types
 $print(versionOfCompilerTypes);
 $print($file.lineNumber, $file.filePath);
 $compileTime();
+
+const anotherTest = $package.repository;
+$print($package.customField)
