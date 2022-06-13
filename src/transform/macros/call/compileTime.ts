@@ -4,7 +4,7 @@ import { CallMacro } from "../macro";
 
 export const CompileTimeMacro: CallMacro = {
 	getSymbol(state: TransformState) {
-		return state.symbolProvider.moduleFile?.get("$compileTime");
+		return state.symbolProvider.moduleFile!.get("$compileTime");
 	},
 	transform(state: TransformState, node: ts.CallExpression) {
 		let typeName = "UnixTimestamp";

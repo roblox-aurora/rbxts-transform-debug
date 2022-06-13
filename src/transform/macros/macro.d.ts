@@ -1,3 +1,4 @@
+import ts from "typescript";
 import { TransformState } from "../../classes/transformState";
 
 interface MacroInfo {
@@ -13,4 +14,12 @@ interface Macro {
 
 export interface CallMacro extends Macro {
 	transform(state: TransformState, node: ts.CallExpression, macro: MacroInfo): ts.Expression;
+}
+
+export interface PropertyMacro extends Macro {
+	transform(
+		state: TransformState,
+		node: ts.PropertyAccessExpression | ts.ElementAccessExpression,
+		macro: MacroInfo,
+	): ts.Expression;
 }

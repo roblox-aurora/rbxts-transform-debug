@@ -1,8 +1,10 @@
 import assert from "assert";
 import ts from "typescript";
-import { CALL_MACROS } from "../transform/macros/call/callMacros";
-import { CallMacro } from "../transform/macros/macro";
+import { CALL_MACROS } from "../transform/macros/call";
+import { PROPERTY_MACROS } from "../transform/macros/literal";
+import { CallMacro, PropertyMacro } from "../transform/macros/macro";
 import { GitStatusProvider } from "./gitStatusProvider";
+import { PackageJsonProvider } from "./packageJsonProvider";
 import { SymbolProvider } from "./symbolProvider";
 
 export interface TransformConfiguration {
@@ -14,14 +16,16 @@ export interface TransformConfiguration {
 
 export class TransformState {
 	private isMacrosSetup = false;
-	public typeChecker: ts.TypeChecker;
-	public options = this.program.getCompilerOptions();
-	public srcDir = this.options.rootDir ?? process.cwd();
-
 	private callMacros = new Map<ts.Symbol, CallMacro>();
+	private propertyMacros = new Map<ts.Symbol, PropertyMacro>();
 
-	public symbolProvider: SymbolProvider;
+	public readonly typeChecker: ts.TypeChecker;
+	public readonly options = this.program.getCompilerOptions();
+	public readonly srcDir = this.options.rootDir ?? this.program.getCurrentDirectory();
+
+	public readonly symbolProvider: SymbolProvider;
 	public readonly gitProvider: GitStatusProvider;
+	public readonly packageJsonProvider: PackageJsonProvider;
 
 	public constructor(
 		public program: ts.Program,
@@ -31,6 +35,7 @@ export class TransformState {
 		this.typeChecker = program.getTypeChecker();
 		this.symbolProvider = new SymbolProvider(this);
 		this.gitProvider = new GitStatusProvider(this);
+		this.packageJsonProvider = new PackageJsonProvider(this);
 		this.initMacros();
 	}
 
@@ -48,10 +53,25 @@ export class TransformState {
 				this.callMacros.set(symbols, macro);
 			}
 		}
+
+		for (const macro of PROPERTY_MACROS) {
+			const symbols = macro.getSymbol(this);
+			if (Array.isArray(symbols)) {
+				for (const symbol of symbols) {
+					this.propertyMacros.set(symbol, macro);
+				}
+			} else {
+				this.propertyMacros.set(symbols, macro);
+			}
+		}
 	}
 
 	public getCallMacro(symbol: ts.Symbol): CallMacro | undefined {
 		return this.callMacros.get(symbol);
+	}
+
+	public getPropertyMacro(symbol: ts.Symbol): PropertyMacro | undefined {
+		return this.propertyMacros.get(symbol);
 	}
 
 	public getSymbol(node: ts.Node, followAlias = true): ts.Symbol | undefined {

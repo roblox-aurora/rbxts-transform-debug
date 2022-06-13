@@ -199,6 +199,8 @@ const DEFAULTS: DebugTransformConfiguration = {
 };
 
 export default function transform(program: ts.Program, userConfiguration: DebugTransformConfiguration) {
+	const printer = ts.createPrinter({});
+
 	userConfiguration = { ...DEFAULTS, ...userConfiguration };
 	if (userConfiguration.environmentRequires) {
 		for (const [k, v] of Object.entries(userConfiguration.environmentRequires)) {
@@ -228,12 +230,14 @@ export default function transform(program: ts.Program, userConfiguration: DebugT
 	}
 
 	return (context: ts.TransformationContext): ((file: ts.SourceFile) => ts.Node) => {
+		const SHOULD_DEBUG_PROFILE = process.env.DEBUG_PROFILE;
+		const SHOULD_DEBUG_EMIT = process.env.DEBUG_OUTPUT;
 		const state = new TransformState(program, context, userConfiguration);
 
 		return (file: ts.SourceFile) => {
 			const label = `$debug:${file.fileName}`;
 
-			if (userConfiguration.verbose && process.env.DEBUG_PROFILE) {
+			if (SHOULD_DEBUG_PROFILE !== undefined) {
 				console.count("$debug:transformations");
 				console.time(label);
 			}
@@ -241,13 +245,17 @@ export default function transform(program: ts.Program, userConfiguration: DebugT
 			if (userConfiguration.version === 1) {
 				const result = visitNodeAndChildren(file, program, context, userConfiguration);
 
-				if (userConfiguration.verbose && process.env.DEBUG_PROFILE) console.timeEnd(label);
+				if (SHOULD_DEBUG_PROFILE !== undefined) console.timeEnd(label);
 				return result;
 			}
 
 			const result = transformFile(state, file);
 
-			if (userConfiguration.verbose && process.env.DEBUG_PROFILE) console.timeEnd(label);
+			if (SHOULD_DEBUG_PROFILE !== undefined) console.timeEnd(label);
+
+			if (SHOULD_DEBUG_EMIT !== undefined) {
+				fs.writeFileSync(file.fileName.replace(/\.(ts)$/gm, ".ts-output"), printer.printFile(result));
+			}
 
 			return result;
 		};

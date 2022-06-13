@@ -80,7 +80,7 @@ export function transformGit(state: TransformState, expression: ts.CallExpressio
 
 export const GitMacro: CallMacro = {
 	getSymbol(state: TransformState) {
-		return state.symbolProvider.moduleFile?.get("$git");
+		return state.symbolProvider.moduleFile!.get("$git");
 	},
 	transform(state: TransformState, node: ts.CallExpression, { symbol }: MacroInfo) {
 		return transformGit(state, node);

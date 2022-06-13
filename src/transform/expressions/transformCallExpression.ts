@@ -9,6 +9,16 @@ export function transformCallExpression(state: TransformState, node: ts.CallExpr
 		if (callMacro) {
 			return callMacro.transform(state, node, { symbol, symbols: [symbol] });
 		}
+
+		if (symbol.valueDeclaration && ts.isNamedDeclaration(symbol.valueDeclaration)) {
+			const valueSymbol = state.getSymbol(symbol.valueDeclaration);
+			if (valueSymbol) {
+				const callMacro = state.getCallMacro(valueSymbol);
+				if (callMacro) {
+					return callMacro.transform(state, node, { symbol: valueSymbol, symbols: [valueSymbol] });
+				}
+			}
+		}
 	}
 
 	return ts.visitEachChild(node, (node) => transformNode(state, node), state.context);

@@ -5,7 +5,7 @@ import { CallMacro } from "../macro";
 
 export const PrintMacro: CallMacro = {
 	getSymbol(state: TransformState) {
-		return state.symbolProvider.moduleFile?.get("$print");
+		return state.symbolProvider.moduleFile!.get("$print");
 	},
 	transform(state: TransformState, node: ts.CallExpression) {
 		return factory.updateCallExpression(node, factory.createIdentifier("print"), undefined, [
@@ -17,7 +17,7 @@ export const PrintMacro: CallMacro = {
 
 export const WarnMacro: CallMacro = {
 	getSymbol(state: TransformState) {
-		return state.symbolProvider.moduleFile?.get("$warn");
+		return state.symbolProvider.moduleFile!.get("$warn");
 	},
 	transform(state: TransformState, node: ts.CallExpression) {
 		return factory.updateCallExpression(node, factory.createIdentifier("warn"), undefined, [

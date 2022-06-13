@@ -1,14 +1,19 @@
+import assert from "assert";
 import ts, { factory } from "typescript";
 import { TransformState } from "../../../class/transformState";
 import { createExpressionDebugPrefixLiteral, formatTransformerDiagnostic, getDebugInfo } from "../../../shared";
 import { CallMacro, MacroInfo } from "../macro";
 
-function createPrintCallExpression(args: ts.Expression[]) {
-	return factory.createCallExpression(factory.createIdentifier("print"), undefined, args);
+function createPrintCallExpression(callExpression: ts.CallExpression | undefined, args: ts.Expression[]) {
+	if (callExpression) {
+		return factory.updateCallExpression(callExpression, factory.createIdentifier("print"), undefined, args);
+	} else {
+		return factory.createCallExpression(factory.createIdentifier("print"), undefined, args);
+	}
 }
 
-export function transformToInlineDebugPrint(node: ts.Expression): ts.Expression {
-	return createPrintCallExpression([createExpressionDebugPrefixLiteral(node), node]);
+export function transformToInlineDebugPrint(callExpression: ts.CallExpression, node: ts.Expression): ts.Expression {
+	return createPrintCallExpression(callExpression, [createExpressionDebugPrefixLiteral(node), node]);
 }
 
 /**
@@ -20,7 +25,7 @@ export function createIIFEBlock(id: ts.Identifier, argument: ts.Expression): ts.
 	return factory.createBlock(
 		[
 			factory.createExpressionStatement(
-				createPrintCallExpression([createExpressionDebugPrefixLiteral(argument), id]),
+				createPrintCallExpression(undefined, [createExpressionDebugPrefixLiteral(argument), id]),
 			),
 			factory.createReturnStatement(id),
 		],
@@ -202,7 +207,9 @@ export function transformToIIFEDebugPrint(
 
 export const DebugMacro: CallMacro = {
 	getSymbol(state: TransformState) {
-		return state.symbolProvider.moduleFile?.get("$dbg");
+		const symbol = state.symbolProvider.moduleFile?.get("$dbg");
+		assert(symbol, "Could not find debug macro symbol");
+		return symbol;
 	},
 	transform(state: TransformState, node: ts.CallExpression, { symbol }: MacroInfo) {
 		const { enabled } = state.config;
@@ -210,7 +217,7 @@ export const DebugMacro: CallMacro = {
 		const [expression, customHandler] = node.arguments;
 		if (ts.isExpressionStatement(node.parent) && customHandler === undefined) {
 			return enabled
-				? transformToInlineDebugPrint(expression)
+				? transformToInlineDebugPrint(node, expression)
 				: ts.isCallExpression(expression)
 				? expression
 				: factory.createVoidExpression(factory.createIdentifier("undefined"));

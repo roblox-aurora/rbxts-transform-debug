@@ -1,3 +1,5 @@
+import { PackageJson } from "types-package-json";
+
 /**
  * The debug information in a `$dbg` custom call
  *
@@ -12,6 +14,8 @@ export interface $DebugInfo {
 	lineNumber: number;
 	rawText: string;
 }
+
+export declare const $package: PackageJson;
 
 /**
  * Creates a debug print for the supplied expression

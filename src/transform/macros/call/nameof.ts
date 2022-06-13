@@ -5,7 +5,7 @@ import { CallMacro } from "../macro";
 
 export const NameOfMacro: CallMacro = {
 	getSymbol(state: TransformState) {
-		return state.symbolProvider.moduleFile?.get("$nameof");
+		return state.symbolProvider.moduleFile!.get("$nameof");
 	},
 	transform(state: TransformState, expression: ts.CallExpression) {
 		const [argument] = expression.arguments;

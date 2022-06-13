@@ -1,8 +1,10 @@
-import { $compileTime, $dbg, $git, $nameof, $print, $warn } from "../../..";
+import { $compileTime, $dbg, $git, $nameof, $package, $print, $warn } from "../../..";
 
 export function makeHello(name: string) {
 	return (`Hello from ${name}!`);
 }
+
+// $package.name;
 
 $dbg("tet");
 $git();
@@ -18,3 +20,8 @@ interface TestInterface {
 }
 
 $nameof<TestInterface>();
+
+
+$package.version
+$print($package.devDependencies);
+$dbg($dbg("hi"));
