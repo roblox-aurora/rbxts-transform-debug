@@ -1,4 +1,15 @@
 import { CallMacro } from "../macro";
+import { CompileTimeMacro } from "./compileTime";
 import { DebugMacro } from "./dbg";
+import { GitMacro } from "./git";
+import { PrintMacro, WarnMacro } from "./logging";
+import { NameOfMacro } from "./nameof";
 
-export const CALL_MACROS = new Array<CallMacro>(DebugMacro);
+export const CALL_MACROS = new Array<CallMacro>(
+	DebugMacro,
+	GitMacro,
+	CompileTimeMacro,
+	PrintMacro,
+	WarnMacro,
+	NameOfMacro,
+);

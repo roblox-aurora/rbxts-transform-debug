@@ -195,7 +195,7 @@ export type DebugTransformConfiguration = TransformConfiguration;
 
 const DEFAULTS: DebugTransformConfiguration = {
 	enabled: true,
-	version: 1,
+	version: 2,
 };
 
 export default function transform(program: ts.Program, userConfiguration: DebugTransformConfiguration) {

@@ -7,21 +7,8 @@ import assert from "assert";
 
 export const moduleResolutionCache = new Map<string, string | false>();
 
-class FunctionSymbol {
-	public constructor(
-		public fileSymbol: ts.Symbol,
-		public state: TransformState,
-		private node: ts.FunctionDeclaration,
-	) {}
-
-	public getSymbol() {
-		return this.state.getSymbol(this.node);
-	}
-}
-
 class FileSymbol {
 	private fileSymbol: ts.Symbol;
-	private functions = new Map<string, FunctionSymbol>();
 
 	public constructor(public state: TransformState, public file: ts.SourceFile) {
 		const fileSymbol = this.state.getSymbol(file);
@@ -31,10 +18,6 @@ class FileSymbol {
 		this.register();
 	}
 
-	getFunction(name: string) {
-		return this.functions.get(name);
-	}
-
 	get(name: string) {
 		const exportSymbol = this.fileSymbol.exports?.get(name as ts.__String);
 		assert(exportSymbol);
@@ -42,25 +25,12 @@ class FileSymbol {
 		return exportSymbol;
 	}
 
-	private registerFunction(node: ts.FunctionDeclaration) {
-		const nodeId = node.name?.text;
-		if (nodeId === undefined) return;
-
-		let func = this.functions.get(nodeId);
-		if (func === undefined) {
-			func = new FunctionSymbol(this.fileSymbol, this.state, node);
-			this.functions.set(nodeId, func);
-		}
-
-		return func;
-	}
-
 	private register() {
-		for (const statement of this.file.statements) {
-			if (ts.isFunctionDeclaration(statement)) {
-				this.registerFunction(statement);
-			}
-		}
+		// for (const statement of this.file.statements) {
+		// 	if (ts.isFunctionDeclaration(statement)) {
+		// 		this.registerFunction(statement);
+		// 	}
+		// }
 	}
 }
 
