@@ -6,6 +6,7 @@ export function makeHello(name: string) {
 
 $dbg("tet");
 $git();
+
 $compileTime();
 $compileTime("ISO-8601");
 $git("Branch", "Commit");

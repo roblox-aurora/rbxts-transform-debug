@@ -1,37 +1,6 @@
 import ts, { factory, PropertyAssignment } from "typescript";
 import { TransformState } from "../../../class/transformState";
 import { CallMacro, MacroInfo } from "../macro";
-import { execSync } from "child_process";
-import execa from "execa";
-import { formatTransformerDiagnostic } from "../../../shared";
-
-let commit: string | undefined;
-let branch: string | undefined;
-let tag: string | undefined;
-let dateString: string | undefined;
-let unixTimestamp: number | undefined;
-
-export function transformCommitId(expression: ts.CallExpression): ts.StringLiteral {
-	const [argument] = expression.arguments;
-
-	if (commit === undefined) {
-		try {
-			commit = execSync("git rev-parse HEAD").toString().replace("\n", "");
-		} catch (err) {
-			throw formatTransformerDiagnostic(
-				"Failed to grab git commit hash. Git not in PATH or project is not using git.",
-				expression,
-				err as string,
-			);
-		}
-	}
-
-	if (argument && argument.kind === ts.SyntaxKind.TrueKeyword) {
-		return factory.createStringLiteral(commit);
-	} else {
-		return factory.createStringLiteral(commit.substr(0, 7));
-	}
-}
 
 export function stringArgsToSet<K extends string = string>(
 	expressions: readonly ts.Expression[],
@@ -49,79 +18,46 @@ export function stringArgsToSet<K extends string = string>(
 type ValueOf<T> = T[keyof T];
 const keys = ["Commit", "Branch", "CommitHash", "LatestTag", "ISODate", "Timestamp"] as const;
 
-export function transformGit(expression: ts.CallExpression): ts.AsExpression {
+export function transformGit(state: TransformState, expression: ts.CallExpression): ts.AsExpression {
 	let toInclude: ReadonlySet<ValueOf<typeof keys>> = new Set(keys);
+
+	const git = state.gitProvider;
 
 	const args = expression.arguments;
 	if (args.length > 0) {
 		toInclude = stringArgsToSet(args, keys);
 	}
 
-	if (branch === undefined) {
-		try {
-			({ stdout: branch } = execa.commandSync("git rev-parse --abbrev-ref HEAD"));
-		} catch (err) {
-			throw formatTransformerDiagnostic(
-				"Failed to grab git info. Git not in PATH or project is not using git.",
-				expression,
-				err as string,
-			);
-		}
-	}
-
-	if (commit === undefined) {
-		try {
-			({ stdout: commit } = execa.commandSync("git rev-parse HEAD"));
-		} catch (err) {
-			throw formatTransformerDiagnostic(
-				"Failed to grab git info. Git not in PATH or project is not using git.",
-				expression,
-				err as string,
-			);
-		}
-	}
-
-	if (dateString === undefined) {
-		try {
-			const { stdout } = execa.commandSync("git show -s --format=%ct");
-			dateString = new Date(parseInt(stdout) * 1000).toISOString();
-			unixTimestamp = parseInt(stdout);
-		} catch (err) {
-			throw formatTransformerDiagnostic(
-				"Failed to grab git info. Git not in PATH or project is not using git.",
-				expression,
-				err as string,
-			);
-		}
-	}
-
-	if (tag === undefined) {
-		try {
-			({ stdout: tag } = execa.commandSync("git describe --abbrev=0 --tags"));
-		} catch (err) {
-			tag = "";
-		}
-	}
-
 	const properties = new Array<PropertyAssignment>();
 
 	if (toInclude.has("Branch")) {
-		properties.push(factory.createPropertyAssignment("Branch", factory.createStringLiteral(branch)));
+		properties.push(factory.createPropertyAssignment("Branch", factory.createStringLiteral(git.query("branch"))));
 	}
 
 	if (toInclude.has("Commit")) {
-		properties.push(factory.createPropertyAssignment("Commit", factory.createStringLiteral(commit.substr(0, 7))));
+		properties.push(
+			factory.createPropertyAssignment(
+				"Commit",
+				factory.createStringLiteral(git.query("commit").substring(0, 7)),
+			),
+		);
 	}
 
 	if (toInclude.has("CommitHash")) {
-		properties.push(factory.createPropertyAssignment("CommitHash", factory.createStringLiteral(commit)));
+		properties.push(
+			factory.createPropertyAssignment("CommitHash", factory.createStringLiteral(git.query("commit"))),
+		);
 	}
 
 	if (toInclude.has("LatestTag")) {
-		properties.push(factory.createPropertyAssignment("LatestTag", factory.createStringLiteral(tag)));
+		properties.push(
+			factory.createPropertyAssignment("LatestTag", factory.createStringLiteral(git.query("latestTag"))),
+		);
 	}
 
 	if (toInclude.has("ISODate")) {
+		const dateString = git.query("isoTimestamp");
+
 		properties.push(
 			factory.createPropertyAssignment(
 				"ISODate",
@@ -131,9 +67,9 @@ export function transformGit(expression: ts.CallExpression): ts.AsExpression {
 	}
 
 	if (toInclude.has("Timestamp")) {
-		properties.push(
-			factory.createPropertyAssignment("Timestamp", factory.createNumericLiteral(unixTimestamp ?? 0)),
-		);
+		const unixTimestamp = git.query("unixTimestamp");
+
+		properties.push(factory.createPropertyAssignment("Timestamp", factory.createNumericLiteral(unixTimestamp)));
 	}
 
 	return factory.createAsExpression(
@@ -147,6 +83,6 @@ export const GitMacro: CallMacro = {
 		return state.symbolProvider.moduleFile?.get("$git");
 	},
 	transform(state: TransformState, node: ts.CallExpression, { symbol }: MacroInfo) {
-		return transformGit(node);
+		return transformGit(state, node);
 	},
 };

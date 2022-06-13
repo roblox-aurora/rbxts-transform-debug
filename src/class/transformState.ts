@@ -2,6 +2,7 @@ import assert from "assert";
 import ts from "typescript";
 import { CALL_MACROS } from "../transform/macros/call/callMacros";
 import { CallMacro } from "../transform/macros/macro";
+import { GitStatusProvider } from "./gitStatusProvider";
 import { SymbolProvider } from "./symbolProvider";
 
 export interface TransformConfiguration {
@@ -20,6 +21,7 @@ export class TransformState {
 	private callMacros = new Map<ts.Symbol, CallMacro>();
 
 	public symbolProvider: SymbolProvider;
+	public readonly gitProvider: GitStatusProvider;
 
 	public constructor(
 		public program: ts.Program,
@@ -28,6 +30,7 @@ export class TransformState {
 	) {
 		this.typeChecker = program.getTypeChecker();
 		this.symbolProvider = new SymbolProvider(this);
+		this.gitProvider = new GitStatusProvider(this);
 		this.initMacros();
 	}
 
