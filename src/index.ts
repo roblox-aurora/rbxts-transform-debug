@@ -9,6 +9,8 @@ import chalk from "chalk";
 import { transformNameOf } from "./nameof";
 import { transformCommitId, transformGit } from "./git";
 import { transformTime } from "./time";
+import { TransformConfiguration, TransformState } from "./class/transformState";
+import { transformFile } from "./transform/transformFile";
 
 const sourceText = fs.readFileSync(path.join(__dirname, "..", "index.d.ts"), "utf8");
 function isModule(sourceFile: ts.SourceFile) {
@@ -189,14 +191,11 @@ function visitNode(
 	return node;
 }
 
-export interface DebugTransformConfiguration {
-	enabled: boolean;
-	verbose?: boolean;
-	environmentRequires?: Record<string, string | boolean>;
-}
+export type DebugTransformConfiguration = TransformConfiguration;
 
 const DEFAULTS: DebugTransformConfiguration = {
 	enabled: true,
+	version: 1,
 };
 
 export default function transform(program: ts.Program, userConfiguration: DebugTransformConfiguration) {
@@ -212,12 +211,45 @@ export default function transform(program: ts.Program, userConfiguration: DebugT
 		}
 	}
 
+	if (process.argv.includes("--verbose")) {
+		userConfiguration.verbose = true;
+	}
+
 	if (userConfiguration.verbose) {
 		// eslint-disable-next-line @typescript-eslint/no-var-requires
 		console.log(formatTransformerDebug("Running version " + require("../package.json").version));
-		console.log(formatTransformerDebug(`Macros enabled: ${chalk.cyan(userConfiguration.enabled)}`));
+		console.log(
+			formatTransformerDebug(
+				`Macros enabled: ${chalk.cyan(userConfiguration.enabled)}, Version ${chalk.cyan(
+					userConfiguration.version,
+				)}`,
+			),
+		);
 	}
 
-	return (context: ts.TransformationContext) => (file: ts.SourceFile) =>
-		visitNodeAndChildren(file, program, context, userConfiguration);
+	return (context: ts.TransformationContext): ((file: ts.SourceFile) => ts.Node) => {
+		const state = new TransformState(program, context, userConfiguration);
+
+		return (file: ts.SourceFile) => {
+			const label = `$debug:${file.fileName}`;
+
+			if (userConfiguration.verbose && process.env.DEBUG_PROFILE) {
+				console.count("$debug:transformations");
+				console.time(label);
+			}
+
+			if (userConfiguration.version === 1) {
+				const result = visitNodeAndChildren(file, program, context, userConfiguration);
+
+				if (userConfiguration.verbose && process.env.DEBUG_PROFILE) console.timeEnd(label);
+				return result;
+			}
+
+			const result = transformFile(state, file);
+
+			if (userConfiguration.verbose && process.env.DEBUG_PROFILE) console.timeEnd(label);
+
+			return result;
+		};
+	};
 }
