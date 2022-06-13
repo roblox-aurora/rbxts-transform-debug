@@ -6,8 +6,6 @@ export function transformPropertyAccessExpression(
 	state: TransformState,
 	node: ts.PropertyAccessExpression,
 ): ts.Expression {
-    console.log("transform", node.getText());
-
 	const symbol = state.getSymbol(node.expression);
 	if (symbol !== undefined) {
 		const macro = state.getPropertyMacro(symbol);

@@ -199,7 +199,7 @@ const DEFAULTS: DebugTransformConfiguration = {
 };
 
 export default function transform(program: ts.Program, userConfiguration: DebugTransformConfiguration) {
-	const printer = ts.createPrinter({});
+	const printer = ts.createPrinter();
 
 	userConfiguration = { ...DEFAULTS, ...userConfiguration };
 	if (userConfiguration.environmentRequires) {

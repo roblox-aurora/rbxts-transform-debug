@@ -1,5 +1,7 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import assert from "assert";
 import ts from "typescript";
+import { factory } from "typescript";
 import { CALL_MACROS } from "../transform/macros/call";
 import { PROPERTY_MACROS } from "../transform/macros/literal";
 import { CallMacro, PropertyMacro } from "../transform/macros/macro";
@@ -82,5 +84,34 @@ export class TransformState {
 		} else {
 			return symbol;
 		}
+	}
+
+	private prereqStack = new Array<Array<ts.Statement>>();
+	public capture<T>(cb: () => T): [T, ts.Statement[]] {
+		this.prereqStack.push([]);
+		const result = cb();
+		return [result, this.prereqStack.pop()!];
+	}
+
+	public prereq(statement: ts.Statement): void {
+		const stack = this.prereqStack[this.prereqStack.length - 1];
+		if (stack) stack.push(statement);
+	}
+
+	public prereqList(statements: ts.Statement[]): void {
+		const stack = this.prereqStack[this.prereqStack.length - 1];
+		if (stack) stack.push(...statements);
+	}
+
+	public prereqDeclaration(id: string | ts.Identifier, value: ts.Expression): void {
+		this.prereq(
+			factory.createVariableStatement(
+				undefined,
+				factory.createVariableDeclarationList(
+					[factory.createVariableDeclaration(id, undefined, undefined, value)],
+					ts.NodeFlags.Const,
+				),
+			),
+		);
 	}
 }

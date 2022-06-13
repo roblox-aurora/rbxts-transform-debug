@@ -1,5 +1,5 @@
 import assert from "assert";
-import ts from "typescript";
+import ts, { factory } from "typescript";
 import { PackageJsonProvider } from "../../../class/packageJsonProvider";
 import { TransformState } from "../../../class/transformState";
 import { toExpression } from "../../../util/toAst";
@@ -20,6 +20,8 @@ function getRelativePath(
 	}
 }
 
+const symbolCache = new Map<ts.Symbol, ts.Node>();
+
 export const PackagePropertyMacro: PropertyMacro = {
 	getSymbol(state: TransformState) {
 		const mod = state.symbolProvider.moduleFile?.get("$package");
@@ -30,16 +32,33 @@ export const PackagePropertyMacro: PropertyMacro = {
 		const packageJson = state.packageJsonProvider;
 
 		const parentPath = getRelativePath(state, packageJson, node.expression);
-		console.log("parentPath", parentPath);
 
 		if (ts.isPropertyAccessExpression(node)) {
-			console.log("ispropAccess", node.name.text);
 			const rhs = node.name;
-			const value = toExpression(parentPath?.[rhs.text as never]);
-			if (value !== undefined) {
-				return value;
+
+			const value: unknown = parentPath?.[rhs.text as never];
+
+			const retExpression = toExpression(value);
+
+			if (typeof value === "object") {
+				const id = factory.createUniqueName(rhs.text);
+				state.prereq(
+					factory.createVariableStatement(
+						undefined,
+						factory.createVariableDeclarationList(
+							[factory.createVariableDeclaration(id, undefined, undefined, retExpression)],
+							ts.NodeFlags.Const,
+						),
+					),
+				);
+
+				return id;
+			} else {
+				if (retExpression !== undefined) {
+					return retExpression;
+				}
 			}
-        }
+		}
 
 		return node;
 	},

@@ -95,7 +95,7 @@ export function createCustomIIFEBlock(
 export function transformToIIFEDebugPrint(
 	expression: ts.Expression,
 	customHandler: ts.Expression,
-	program: ts.Program,
+	state: TransformState,
 ): ts.Expression {
 	if (customHandler) {
 		if (ts.isArrowFunction(customHandler) || ts.isFunctionExpression(customHandler)) {
@@ -105,7 +105,7 @@ export function transformToIIFEDebugPrint(
 			} = customHandler;
 			const valueId = factory.createIdentifier(sourceParam.name.getText());
 
-			const checker = program.getTypeChecker();
+			const checker = state.typeChecker;
 			const methodSignature = checker.getSignatureFromDeclaration(customHandler);
 			if (methodSignature) {
 				const returnType = methodSignature.getReturnType();
@@ -127,20 +127,31 @@ export function transformToIIFEDebugPrint(
 				}
 			}
 
-			return factory.createCallExpression(
-				factory.createParenthesizedExpression(
-					factory.createArrowFunction(
-						undefined,
-						undefined,
-						[factory.createParameterDeclaration(undefined, undefined, undefined, valueId)],
-						undefined,
-						undefined,
-						createCustomIIFEBlock(expression, body, valueId, debugInfo),
-					),
+			const prereqId = factory.createUniqueName("debug");
+			state.prereqDeclaration(
+				prereqId,
+				factory.createArrowFunction(
+					undefined,
+					undefined,
+					[
+						factory.createParameterDeclaration(
+							undefined,
+							undefined,
+							undefined,
+							valueId,
+							undefined,
+							factory.createTypeReferenceNode(
+								checker.typeToString(state.typeChecker.getTypeAtLocation(expression)),
+							),
+						),
+					],
+					undefined,
+					undefined,
+					createCustomIIFEBlock(expression, body, valueId, debugInfo),
 				),
-				undefined,
-				[expression],
 			);
+
+			return factory.createCallExpression(prereqId, undefined, [expression]);
 		} else if (ts.isIdentifier(customHandler) || ts.isPropertyAccessExpression(customHandler)) {
 			const id = factory.createUniqueName("value");
 			const tmp = factory.createUniqueName("debugInfo");
@@ -186,22 +197,34 @@ export function transformToIIFEDebugPrint(
 			);
 		}
 	} else {
-		const id = factory.createUniqueName("value");
+		const prereqId = factory.createUniqueName("debug");
 
-		return factory.createCallExpression(
-			factory.createParenthesizedExpression(
-				factory.createArrowFunction(
-					undefined,
-					undefined,
-					[factory.createParameterDeclaration(undefined, undefined, undefined, id)],
-					undefined,
-					undefined,
-					createIIFEBlock(id, expression),
-				),
+		const id = factory.createIdentifier("value");
+
+		state.prereqDeclaration(
+			prereqId,
+			factory.createArrowFunction(
+				undefined,
+				undefined,
+				[
+					factory.createParameterDeclaration(
+						undefined,
+						undefined,
+						undefined,
+						id,
+						undefined,
+						factory.createTypeReferenceNode(
+							state.typeChecker.typeToString(state.typeChecker.getTypeAtLocation(expression)),
+						),
+					),
+				],
+				undefined,
+				undefined,
+				createIIFEBlock(id, expression),
 			),
-			undefined,
-			[expression],
 		);
+
+		return factory.createCallExpression(prereqId, undefined, [expression]);
 	}
 }
 
@@ -222,6 +245,6 @@ export const DebugMacro: CallMacro = {
 				? expression
 				: factory.createVoidExpression(factory.createIdentifier("undefined"));
 		}
-		return enabled ? transformToIIFEDebugPrint(expression, customHandler, state.program) : expression;
+		return enabled ? transformToIIFEDebugPrint(expression, customHandler, state) : expression;
 	},
 };

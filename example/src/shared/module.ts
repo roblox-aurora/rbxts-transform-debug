@@ -22,6 +22,8 @@ interface TestInterface {
 $nameof<TestInterface>();
 
 
-$package.version
-$print($package.devDependencies);
-$dbg($dbg("hi"));
+// const test = $package.devDependencies!["test"];
+// $print($package["name"]);
+print($dbg("hi there"));
+
+$dbg(10 > 30, (name, debugInfo) => {})
