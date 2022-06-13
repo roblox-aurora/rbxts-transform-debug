@@ -49,8 +49,6 @@ export const PackagePropertyMacro: PropertyMacro = {
 		assert(packageSymbol);
 		const packageJson = state.packageJsonProvider;
 
-		console.log(ts.SyntaxKind[node.parent.kind], node.parent.getText());
-
 		const name = resolveName(node);
 
 		if (ts.isPropertyAccessExpression(node.parent)) {
