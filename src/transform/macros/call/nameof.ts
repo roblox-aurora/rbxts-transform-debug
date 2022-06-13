@@ -1,6 +1,6 @@
 import ts, { factory } from "typescript";
 import { TransformState } from "../../../class/transformState";
-import { formatTransformerDiagnostic } from "../../../shared";
+import { formatTransformerDiagnostic } from "../../../util/shared";
 import { CallMacro } from "../macro";
 
 export const NameOfMacro: CallMacro = {

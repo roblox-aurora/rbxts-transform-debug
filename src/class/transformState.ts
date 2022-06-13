@@ -11,7 +11,6 @@ import { SymbolProvider } from "./symbolProvider";
 export interface TransformConfiguration {
 	enabled: boolean;
 	verbose?: boolean;
-	version: 1 | 2;
 	environmentRequires?: Record<string, string | boolean>;
 }
 

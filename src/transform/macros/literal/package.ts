@@ -3,7 +3,7 @@ import { PackageJson } from "types-package-json";
 import ts, { factory } from "typescript";
 import { PackageJsonProvider } from "../../../class/packageJsonProvider";
 import { TransformState } from "../../../class/transformState";
-import { formatTransformerDiagnostic } from "../../../shared";
+import { formatTransformerDiagnostic } from "../../../util/shared";
 import { toExpression } from "../../../util/toAst";
 import { PropertyMacro } from "../macro";
 

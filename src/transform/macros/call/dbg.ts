@@ -1,7 +1,7 @@
 import assert from "assert";
 import ts, { factory } from "typescript";
 import { TransformState } from "../../../class/transformState";
-import { createExpressionDebugPrefixLiteral, formatTransformerDiagnostic, getDebugInfo } from "../../../shared";
+import { createExpressionDebugPrefixLiteral, formatTransformerDiagnostic, getDebugInfo } from "../../../util/shared";
 import { CallMacro, MacroInfo } from "../macro";
 
 function createPrintCallExpression(callExpression: ts.CallExpression | undefined, args: ts.Expression[]) {

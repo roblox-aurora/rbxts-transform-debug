@@ -1,5 +1,5 @@
 import ts, { factory, ObjectLiteralElementLike, PropertyAssignment } from "typescript";
-import { formatTransformerDiagnostic } from "../shared";
+import { formatTransformerDiagnostic } from "./shared";
 
 export function toExpression(value: unknown, name: string): ts.Expression | undefined {
 	if (typeof value === "boolean") {

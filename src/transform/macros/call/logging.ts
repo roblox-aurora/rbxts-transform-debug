@@ -1,6 +1,6 @@
 import ts, { factory } from "typescript";
 import { TransformState } from "../../../class/transformState";
-import { createDebugPrefixLiteral } from "../../../shared";
+import { createDebugPrefixLiteral } from "../../../util/shared";
 import { CallMacro } from "../macro";
 
 export const PrintMacro: CallMacro = {

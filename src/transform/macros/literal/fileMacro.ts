@@ -2,7 +2,7 @@ import assert from "assert";
 import path from "path";
 import ts, { factory } from "typescript";
 import { TransformState } from "../../../class/transformState";
-import { formatTransformerDiagnostic } from "../../../shared";
+import { formatTransformerDiagnostic } from "../../../util/shared";
 import { PropertyMacro } from "../macro";
 
 function resolveName(value: ts.PropertyAccessExpression | ts.ElementAccessExpression) {
