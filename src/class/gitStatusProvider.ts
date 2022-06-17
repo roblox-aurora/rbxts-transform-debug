@@ -2,6 +2,7 @@ import { TransformState } from "./transformState";
 import fs from "fs";
 import path from "path";
 import gitRepoInfo, { GitRepoInfo } from "git-repo-info";
+import chalk from "chalk";
 
 interface GitProp {
 	branch: string;
@@ -41,6 +42,7 @@ export class GitStatusProvider {
 			return prop as GitProp[TGitQuery];
 		}
 
+		this.state.logger.infoIfVerbose("Query once: Git repository for '" + chalk.yellow(gitQuery) + "'");
 		switch (gitQuery) {
 			case "branch": {
 				const branch = repoInfo.branch;

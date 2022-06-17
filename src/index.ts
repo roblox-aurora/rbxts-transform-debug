@@ -1,10 +1,10 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 import ts from "typescript";
 import fs from "fs";
-import { formatTransformerDebug } from "./util/shared";
-import chalk from "chalk";
 import { TransformConfiguration, TransformState } from "./class/transformState";
 import { transformFile } from "./transform/transformFile";
+import { LoggerProvider } from "./class/logProvider";
 
 const DEFAULTS: TransformConfiguration = {
 	enabled: true,
@@ -29,16 +29,19 @@ export default function transform(program: ts.Program, userConfiguration: Transf
 		userConfiguration.verbose = true;
 	}
 
-	if (userConfiguration.verbose) {
-		// eslint-disable-next-line @typescript-eslint/no-var-requires
-		console.log(formatTransformerDebug("Running version " + require("../package.json").version));
-		console.log(formatTransformerDebug(`Macros enabled: ${chalk.cyan(userConfiguration.enabled)}`));
+	const logger = new LoggerProvider(userConfiguration.verbose!, userConfiguration.verbose!);
+
+	if (logger.verbose) {
+		logger.write("\n");
 	}
+
+	logger.infoIfVerbose(userConfiguration.enabled ? "Enabling debug macro emit" : "Skipping over debug macro emit");
 
 	return (context: ts.TransformationContext): ((file: ts.SourceFile) => ts.Node) => {
 		const SHOULD_DEBUG_PROFILE = process.env.DEBUG_PROFILE;
 		const SHOULD_DEBUG_EMIT = process.env.DEBUG_OUTPUT;
-		const state = new TransformState(program, context, userConfiguration);
+
+		const state = new TransformState(program, context, userConfiguration, logger);
 
 		return (file: ts.SourceFile) => {
 			const label = `$debug:${file.fileName}`;

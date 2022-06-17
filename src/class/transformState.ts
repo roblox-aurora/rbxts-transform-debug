@@ -7,6 +7,7 @@ import { CallMacro, PropertyMacro } from "../transform/macros/macro";
 import { GitStatusProvider } from "./gitStatusProvider";
 import { PackageJsonProvider } from "./packageJsonProvider";
 import { SymbolProvider } from "./symbolProvider";
+import { LoggerProvider } from "./logProvider";
 
 export interface TransformConfiguration {
 	enabled: boolean;
@@ -33,6 +34,7 @@ export class TransformState {
 		public program: ts.Program,
 		public context: ts.TransformationContext,
 		public config: TransformConfiguration,
+		public logger: LoggerProvider,
 	) {
 		this.typeChecker = program.getTypeChecker();
 		this.symbolProvider = new SymbolProvider(this);
