@@ -13,7 +13,7 @@ const TRANSFORMERS = new Map<ts.SyntaxKind, (state: TransformState, node: any) =
 export function transformExpression(state: TransformState, expression: ts.Expression): ts.Expression {
 	const transformer = TRANSFORMERS.get(expression.kind);
 	if (transformer) {
-		expression = transformer(state, expression);
+		return transformer(state, expression);
 	}
 	return ts.visitEachChild(expression, (newNode) => transformNode(state, newNode), state.context);
 }

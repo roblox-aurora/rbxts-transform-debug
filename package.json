@@ -1,6 +1,6 @@
 {
   "name": "rbxts-transform-debug",
-  "version": "2.0.0-beta.2",
+  "version": "2.0.0-beta.3",
   "description": "Transformer for debugging things in roblox-ts",
   "main": "out/index.js",
   "scripts": {
