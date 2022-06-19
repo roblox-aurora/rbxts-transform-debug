@@ -88,7 +88,7 @@ export function $warn(...params: unknown[]): void;
  *
  * This can be optionally enabled/disabled in emit using `enabled` and `environmentRequires`.
  */
-export function $error(message: string, level: number): void;
+export function $error(message: string, level?: number): never;
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 
