@@ -18,14 +18,34 @@ export function stringArgsToSet<K extends string = string>(
 type ValueOf<T> = T[keyof T];
 const keys = ["Commit", "Branch", "CommitHash", "LatestTag", "ISODate", "Timestamp"] as const;
 
-export function transformGit(state: TransformState, expression: ts.CallExpression): ts.AsExpression {
-	let toInclude: ReadonlySet<ValueOf<typeof keys>> = new Set(keys);
+export function transformGit(state: TransformState, expression: ts.CallExpression): ts.Expression {
+	let toInclude: ReadonlySet<string> = new Set(keys);
 
 	const git = state.gitProvider;
 
 	const args = expression.arguments;
 	if (args.length > 0) {
 		toInclude = stringArgsToSet(args, keys);
+	} else {
+		// "optimizations"
+
+		// If we're part of a direct prop access, we can reduce to that.
+		if (ts.isPropertyAccessExpression(expression.parent)) {
+			toInclude = new Set([expression.parent.name.text]);
+		}
+		// else if (ts.isVariableDeclaration(expression.parent)) {
+		// 	// Slim down if using object bindings
+		// 	const binding = expression.parent.parent;
+		// 	if (ts.isVariableDeclarationList(binding) && binding.declarations.length === 1) {
+		// 		const [first] = binding.declarations;
+		// 		if (ts.isObjectBindingPattern(first.name)) {
+		// 			toInclude.clear();
+		// 			for (const binding of first.name.elements) {
+		// 				toInclude.add(binding.name.getText());
+		// 			}
+		// 		}
+		// 	}
+		// }
 	}
 
 	const properties = new Array<PropertyAssignment>();
