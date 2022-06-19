@@ -2,7 +2,7 @@ import { CallMacro } from "../macro";
 import { CompileTimeMacro } from "./compileTime";
 import { DebugMacro } from "./dbg";
 import { GitMacro } from "./git";
-import { PrintMacro, WarnMacro } from "./logging";
+import { ErrorMacro, PrintMacro, WarnMacro } from "./logging";
 import { NameOfMacro } from "./nameof";
 
 export const CALL_MACROS = new Array<CallMacro>(
@@ -11,5 +11,6 @@ export const CALL_MACROS = new Array<CallMacro>(
 	CompileTimeMacro,
 	PrintMacro,
 	WarnMacro,
+	ErrorMacro,
 	NameOfMacro,
 );
