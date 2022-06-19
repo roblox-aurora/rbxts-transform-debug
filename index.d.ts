@@ -82,6 +82,14 @@ export function $print(...params: unknown[]): void;
  */
 export function $warn(...params: unknown[]): void;
 
+/**
+ * Same as `error`, but includes the source information
+ * Will be prefixed with something like `[src/shared/module.ts:11]`
+ *
+ * This can be optionally enabled/disabled in emit using `enabled` and `environmentRequires`.
+ */
+export function $error(message: string, level?: number): never;
+
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 
 /**
