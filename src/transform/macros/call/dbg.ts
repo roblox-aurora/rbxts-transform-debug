@@ -21,11 +21,14 @@ export function transformToInlineDebugPrint(callExpression: ts.CallExpression, n
  * @param id The identifier
  * @param argument The expression
  */
-export function createIIFEBlock(id: ts.Identifier, argument: ts.Expression): ts.Block {
+export function createIIFEBlock(id: ts.Identifier, argument: ts.Expression, isTuple: boolean): ts.Block {
 	return factory.createBlock(
 		[
 			factory.createExpressionStatement(
-				createPrintCallExpression(undefined, [createExpressionDebugPrefixLiteral(argument), id]),
+				createPrintCallExpression(undefined, [
+					createExpressionDebugPrefixLiteral(argument),
+					isTuple ? factory.createSpreadElement(id) : id,
+				]),
 			),
 			factory.createReturnStatement(id),
 		],
@@ -37,13 +40,19 @@ export function createIIFEBlock(id: ts.Identifier, argument: ts.Expression): ts.
  * Creates an object with debug information about the specified expression
  * @param expression The expression
  */
-export function createDebugObject(expression: ts.Expression): ts.ObjectLiteralExpression {
+export function createDebugObject(
+	state: TransformState,
+	expression: ts.Expression,
+	isLuaTuple: boolean,
+): ts.ObjectLiteralExpression {
 	const info = getDebugInfo(expression);
+
 	return factory.createObjectLiteralExpression(
 		[
 			factory.createPropertyAssignment("file", factory.createStringLiteral(info.relativePath)),
 			factory.createPropertyAssignment("lineNumber", factory.createNumericLiteral(info.linePos)),
 			factory.createPropertyAssignment("rawText", factory.createStringLiteral(expression.getText())),
+			factory.createPropertyAssignment("isLuaTuple", isLuaTuple ? factory.createTrue() : factory.createFalse()),
 		],
 		true,
 	);
@@ -56,10 +65,12 @@ export function createDebugObject(expression: ts.Expression): ts.ObjectLiteralEx
  * @param debugInfoParam
  */
 export function createCustomIIFEBlock(
+	state: TransformState,
 	expression: ts.Expression,
 	body: ts.ConciseBody,
 	sourceId: ts.Identifier,
 	debugInfoParam: ts.ParameterDeclaration | undefined,
+	isTuple: boolean,
 ): ts.Block {
 	if (ts.isBlock(body)) {
 		const newBody = [...body.statements];
@@ -74,7 +85,7 @@ export function createCustomIIFEBlock(
 								factory.createIdentifier(debugInfoParam.name.getText()),
 								undefined,
 								undefined,
-								createDebugObject(expression),
+								createDebugObject(state, expression, isTuple),
 							),
 						],
 
@@ -88,7 +99,7 @@ export function createCustomIIFEBlock(
 		return factory.createBlock(newBody);
 	} else {
 		const id = factory.createIdentifier("value");
-		return createIIFEBlock(id, expression);
+		return createIIFEBlock(id, expression, isTuple);
 	}
 }
 
@@ -97,6 +108,9 @@ export function transformToIIFEDebugPrint(
 	customHandler: ts.Expression,
 	state: TransformState,
 ): ts.Expression {
+	const expressionType = state.typeChecker.getTypeAtLocation(expression);
+	const isLuaTupleType = state.symbolProvider.isLuaTupleType(expressionType);
+
 	if (customHandler) {
 		if (ts.isArrowFunction(customHandler) || ts.isFunctionExpression(customHandler)) {
 			const {
@@ -139,7 +153,7 @@ export function transformToIIFEDebugPrint(
 						factory.createParameterDeclaration(
 							undefined,
 							undefined,
-							undefined,
+							isLuaTupleType ? factory.createToken(ts.SyntaxKind.DotDotDotToken) : undefined,
 							valueId,
 							undefined,
 							undefined,
@@ -147,7 +161,7 @@ export function transformToIIFEDebugPrint(
 					],
 					undefined,
 					undefined,
-					createCustomIIFEBlock(expression, body, valueId, debugInfo),
+					createCustomIIFEBlock(state, expression, body, valueId, debugInfo, isLuaTupleType),
 				),
 				undefined,
 				[expression],
@@ -173,7 +187,7 @@ export function transformToIIFEDebugPrint(
 											tmp,
 											undefined,
 											undefined,
-											createDebugObject(expression),
+											createDebugObject(state, expression, isLuaTupleType),
 										),
 									],
 
@@ -220,7 +234,7 @@ export function transformToIIFEDebugPrint(
 				],
 				undefined,
 				undefined,
-				createIIFEBlock(id, expression),
+				createIIFEBlock(id, expression, isLuaTupleType),
 			),
 		);
 

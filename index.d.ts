@@ -22,6 +22,11 @@ export interface DbgExpressionInfo {
 	 * The raw text of the expression
 	 */
 	readonly rawText: string;
+
+	/**
+	 * Whether or not the expression is a LuaTuple
+	 */
+	readonly isLuaTuple: boolean;
 }
 
 /** @deprecated */
