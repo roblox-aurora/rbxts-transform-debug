@@ -107,12 +107,12 @@ export class TransformState {
 		if (stack) stack.push(...statements);
 	}
 
-	public prereqDeclaration(id: string | ts.Identifier, value: ts.Expression): void {
+	public prereqDeclaration(id: string | ts.Identifier, value: ts.Expression, type?: ts.TypeNode | undefined): void {
 		this.prereq(
 			factory.createVariableStatement(
 				undefined,
 				factory.createVariableDeclarationList(
-					[factory.createVariableDeclaration(id, undefined, undefined, value)],
+					[factory.createVariableDeclaration(id, undefined, type, value)],
 					ts.NodeFlags.Const,
 				),
 			),

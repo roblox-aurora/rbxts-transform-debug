@@ -103,7 +103,11 @@ export function transformToIIFEDebugPrint(
 				body,
 				parameters: [sourceParam, debugInfo],
 			} = customHandler;
-			const valueId = factory.createIdentifier(sourceParam.name.getText());
+
+			const valueId =
+				sourceParam !== undefined
+					? factory.createIdentifier(sourceParam.name.getText())
+					: factory.createUniqueName("debug");
 
 			const checker = state.typeChecker;
 			const methodSignature = checker.getSignatureFromDeclaration(customHandler);
@@ -127,9 +131,7 @@ export function transformToIIFEDebugPrint(
 				}
 			}
 
-			const prereqId = factory.createUniqueName("debug");
-			state.prereqDeclaration(
-				prereqId,
+			return factory.createCallExpression(
 				factory.createArrowFunction(
 					undefined,
 					undefined,
@@ -140,18 +142,16 @@ export function transformToIIFEDebugPrint(
 							undefined,
 							valueId,
 							undefined,
-							factory.createTypeReferenceNode(
-								checker.typeToString(state.typeChecker.getTypeAtLocation(expression)),
-							),
+							undefined,
 						),
 					],
 					undefined,
 					undefined,
 					createCustomIIFEBlock(expression, body, valueId, debugInfo),
 				),
+				undefined,
+				[expression],
 			);
-
-			return factory.createCallExpression(prereqId, undefined, [expression]);
 		} else if (ts.isIdentifier(customHandler) || ts.isPropertyAccessExpression(customHandler)) {
 			const id = factory.createUniqueName("value");
 			const tmp = factory.createUniqueName("debugInfo");

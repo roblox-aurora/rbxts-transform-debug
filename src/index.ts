@@ -35,11 +35,18 @@ export default function transform(program: ts.Program, userConfiguration: Transf
 
 	logger.infoIfVerbose(userConfiguration.enabled ? "Enabling debug macro emit" : "Skipping over debug macro emit");
 
+	const printer = ts.createPrinter({});
+
 	return (context: ts.TransformationContext): ((file: ts.SourceFile) => ts.Node) => {
 		const state = new TransformState(program, context, userConfiguration, logger);
 
 		return (file: ts.SourceFile) => {
 			const result = transformFile(state, file);
+
+			if (process.env.EMIT_OUTPUT) {
+				fs.writeFileSync(file.fileName.replace(/\.(ts)$/gm, ".ts-output"), printer.printFile(result));
+			}
+
 			return result;
 		};
 	};
