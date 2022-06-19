@@ -30,6 +30,7 @@
 		]
 	},
 	"ignorePatterns": [
-		"*.ts-output"
+		"*.ts-output",
+		"example/**"
 	]
 }

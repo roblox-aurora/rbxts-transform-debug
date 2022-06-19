@@ -1,4 +1,4 @@
-import ts, { factory } from "typescript";
+import ts, { addRange, factory } from "typescript";
 import { TransformState } from "../../../class/transformState";
 import { formatTransformerDiagnostic } from "../../../util/shared";
 import { CallMacro } from "../macro";
@@ -22,6 +22,8 @@ export const NameOfMacro: CallMacro = {
 			} else {
 				if (ts.isTypeReferenceNode(type)) {
 					return factory.createStringLiteral(type.getText());
+				} else if (ts.isKeyword(type.kind)) {
+					return factory.createStringLiteral(type.getText());
 				} else {
 					throw formatTransformerDiagnostic(
 						"Not supported by $nameof<T>(): " + ts.SyntaxKind[type.kind] + ` (where T : ${type.getText()})`,
@@ -34,6 +36,8 @@ export const NameOfMacro: CallMacro = {
 				return factory.createStringLiteral(argument.text);
 			} else if (ts.isStringLiteral(argument)) {
 				return argument;
+			} else {
+				throw formatTransformerDiagnostic("Not supported by $nameof(): " + argument.getText(), argument);
 			}
 		}
 

@@ -212,7 +212,6 @@ export function transformToIIFEDebugPrint(
 		}
 	} else {
 		const prereqId = factory.createUniqueName("debug");
-
 		const id = factory.createIdentifier("value");
 
 		state.prereqDeclaration(
