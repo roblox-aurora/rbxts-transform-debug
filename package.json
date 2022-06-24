@@ -1,6 +1,6 @@
 {
   "name": "rbxts-transform-debug",
-  "version": "2.0.0-beta.4",
+  "version": "2.0.0-rc.0",
   "description": "Transformer for debugging things in roblox-ts",
   "main": "out/index.js",
   "scripts": {
@@ -11,10 +11,10 @@
     "type": "git",
     "url": "git+https://github.com/roblox-aurora/rbxts-transform-debug.git"
   },
-  "keywords": [],
   "publishConfig": {
-    "tag": "beta"
+    "tag": "rc"
   },
+  "keywords": [],
   "author": "vorlias",
   "license": "MIT",
   "bugs": {
