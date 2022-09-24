@@ -46,6 +46,7 @@ export class TransformState {
 
 	private initMacros() {
 		if (this.isMacrosSetup) return;
+		if (!this.symbolProvider.moduleFile) return;
 		this.isMacrosSetup = true;
 
 		for (const macro of CALL_MACROS) {

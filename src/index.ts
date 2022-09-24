@@ -40,6 +40,10 @@ export default function transform(program: ts.Program, userConfiguration: Transf
 	return (context: ts.TransformationContext): ((file: ts.SourceFile) => ts.Node) => {
 		const state = new TransformState(program, context, userConfiguration, logger);
 
+		if (state.symbolProvider.moduleFile === undefined) {
+			return (file) => file;
+		}
+
 		return (file: ts.SourceFile) => {
 			const result = transformFile(state, file);
 
