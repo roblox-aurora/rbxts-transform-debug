@@ -30,7 +30,7 @@ export class GitStatusProvider {
 		const repoInfo = gitRepoInfo();
 		this.repoInfo = repoInfo;
 		this.unixTimestamp = Math.round(
-			repoInfo.authorDate ? new Date().getTime() / 1000 : new Date().getTime() / 1000,
+			repoInfo.authorDate ? new Date(repoInfo.authorDate).getTime() / 1000 : new Date().getTime() / 1000,
 		);
 	}
 
