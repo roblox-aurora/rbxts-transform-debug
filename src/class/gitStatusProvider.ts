@@ -12,11 +12,13 @@ interface GitProp {
 	latestTag: string;
 }
 
+type Nullable<T> = { [P in keyof T]: T[P] | null };
+
 export class GitStatusProvider {
 	private tracked = false;
 
 	private props: Partial<GitProp> = {};
-	private repoInfo: GitRepoInfo;
+	private repoInfo: Nullable<GitRepoInfo>;
 	private unixTimestamp: number;
 
 	public constructor(private state: TransformState) {
@@ -27,7 +29,9 @@ export class GitStatusProvider {
 
 		const repoInfo = gitRepoInfo();
 		this.repoInfo = repoInfo;
-		this.unixTimestamp = new Date(repoInfo.authorDate).getTime() / 1000;
+		this.unixTimestamp = Math.round(
+			repoInfo.authorDate ? new Date().getTime() / 1000 : new Date().getTime() / 1000,
+		);
 	}
 
 	public isTracked(): boolean {
@@ -45,18 +49,18 @@ export class GitStatusProvider {
 		this.state.logger.infoIfVerbose("Query once: Git repository for '" + chalk.yellow(gitQuery) + "'");
 		switch (gitQuery) {
 			case "branch": {
-				const branch = repoInfo.branch;
+				const branch = repoInfo.branch ?? "";
 				this.props.branch = branch;
 				return branch as GitProp[TGitQuery];
 			}
 			case "commit": {
-				const commit: string = repoInfo.sha;
+				const commit: string = repoInfo.sha ?? "";
 				this.props.commit = commit;
 				return commit as GitProp[TGitQuery];
 			}
 			case "unixTimestamp":
 			case "isoTimestamp": {
-				const dateString: string = repoInfo.authorDate;
+				const dateString: string = repoInfo.authorDate ?? new Date().toISOString();
 				const unixTimestamp = this.unixTimestamp;
 
 				this.props.unixTimestamp = unixTimestamp;
