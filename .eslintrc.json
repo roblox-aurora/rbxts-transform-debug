@@ -25,8 +25,13 @@
 				"singleQuote": false,
 				"printWidth": 120,
 				"tabWidth": 4,
-				"useTabs": true
+				"useTabs": true,
+				"endOfLine": "auto"
 			}
 		]
-	}
+	},
+	"ignorePatterns": [
+		"*.ts-output",
+		"example/**"
+	]
 }

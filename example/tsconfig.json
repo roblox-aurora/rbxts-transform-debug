@@ -12,6 +12,7 @@
 		"strict": true,
 		"target": "ESNext",
 		"typeRoots": ["node_modules/@rbxts", "../index"],
+		"moduleDetection": "force",
 
 		// configurable
 		"rootDir": "src",
@@ -23,11 +24,15 @@
 			{
 				"transform": "rbxts-transform-debug",
 				"enabled": true,
-				"verbose": true,
+				"verbose": false,
+				"version": 2,
 				"environmentRequires": {
 					//"NODE_ENV": "development"
 				},
 			}
 		]
-	}
+	},
+	"exclude": [
+		"**/*.ts-output"
+	]
 }

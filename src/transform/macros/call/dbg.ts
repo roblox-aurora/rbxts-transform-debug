@@ -1,13 +1,19 @@
-import path from "path";
+import assert from "assert";
 import ts, { factory } from "typescript";
-import { createExpressionDebugPrefixLiteral, formatTransformerDiagnostic, getDebugInfo } from "./shared";
+import { TransformState } from "../../../class/transformState";
+import { createExpressionDebugPrefixLiteral, formatTransformerDiagnostic, getDebugInfo } from "../../../util/shared";
+import { CallMacro, MacroInfo } from "../macro";
 
-function createPrintCallExpression(args: ts.Expression[]) {
-	return factory.createCallExpression(factory.createIdentifier("print"), undefined, args);
+function createPrintCallExpression(callExpression: ts.CallExpression | undefined, args: ts.Expression[]) {
+	if (callExpression) {
+		return factory.updateCallExpression(callExpression, factory.createIdentifier("print"), undefined, args);
+	} else {
+		return factory.createCallExpression(factory.createIdentifier("print"), undefined, args);
+	}
 }
 
-export function transformToInlineDebugPrint(node: ts.Expression): ts.Expression {
-	return createPrintCallExpression([createExpressionDebugPrefixLiteral(node), node]);
+export function transformToInlineDebugPrint(callExpression: ts.CallExpression, node: ts.Expression): ts.Expression {
+	return createPrintCallExpression(callExpression, [createExpressionDebugPrefixLiteral(node), node]);
 }
 
 /**
@@ -15,11 +21,14 @@ export function transformToInlineDebugPrint(node: ts.Expression): ts.Expression 
  * @param id The identifier
  * @param argument The expression
  */
-export function createIIFEBlock(id: ts.Identifier, argument: ts.Expression): ts.Block {
+export function createIIFEBlock(id: ts.Identifier, argument: ts.Expression, isTuple: boolean): ts.Block {
 	return factory.createBlock(
 		[
 			factory.createExpressionStatement(
-				createPrintCallExpression([createExpressionDebugPrefixLiteral(argument), id]),
+				createPrintCallExpression(undefined, [
+					createExpressionDebugPrefixLiteral(argument),
+					isTuple ? factory.createSpreadElement(id) : id,
+				]),
 			),
 			factory.createReturnStatement(id),
 		],
@@ -31,13 +40,19 @@ export function createIIFEBlock(id: ts.Identifier, argument: ts.Expression): ts.
  * Creates an object with debug information about the specified expression
  * @param expression The expression
  */
-export function createDebugObject(expression: ts.Expression): ts.ObjectLiteralExpression {
+export function createDebugObject(
+	state: TransformState,
+	expression: ts.Expression,
+	isLuaTuple: boolean,
+): ts.ObjectLiteralExpression {
 	const info = getDebugInfo(expression);
+
 	return factory.createObjectLiteralExpression(
 		[
 			factory.createPropertyAssignment("file", factory.createStringLiteral(info.relativePath)),
 			factory.createPropertyAssignment("lineNumber", factory.createNumericLiteral(info.linePos)),
 			factory.createPropertyAssignment("rawText", factory.createStringLiteral(expression.getText())),
+			factory.createPropertyAssignment("isLuaTuple", isLuaTuple ? factory.createTrue() : factory.createFalse()),
 		],
 		true,
 	);
@@ -50,10 +65,12 @@ export function createDebugObject(expression: ts.Expression): ts.ObjectLiteralEx
  * @param debugInfoParam
  */
 export function createCustomIIFEBlock(
+	state: TransformState,
 	expression: ts.Expression,
 	body: ts.ConciseBody,
 	sourceId: ts.Identifier,
 	debugInfoParam: ts.ParameterDeclaration | undefined,
+	isTuple: boolean,
 ): ts.Block {
 	if (ts.isBlock(body)) {
 		const newBody = [...body.statements];
@@ -68,7 +85,7 @@ export function createCustomIIFEBlock(
 								factory.createIdentifier(debugInfoParam.name.getText()),
 								undefined,
 								undefined,
-								createDebugObject(expression),
+								createDebugObject(state, expression, isTuple),
 							),
 						],
 
@@ -82,24 +99,31 @@ export function createCustomIIFEBlock(
 		return factory.createBlock(newBody);
 	} else {
 		const id = factory.createIdentifier("value");
-		return createIIFEBlock(id, expression);
+		return createIIFEBlock(id, expression, isTuple);
 	}
 }
 
 export function transformToIIFEDebugPrint(
 	expression: ts.Expression,
 	customHandler: ts.Expression,
-	program: ts.Program,
+	state: TransformState,
 ): ts.Expression {
+	const expressionType = state.typeChecker.getTypeAtLocation(expression);
+	const isLuaTupleType = state.symbolProvider.isLuaTupleType(expressionType);
+
 	if (customHandler) {
 		if (ts.isArrowFunction(customHandler) || ts.isFunctionExpression(customHandler)) {
 			const {
 				body,
 				parameters: [sourceParam, debugInfo],
 			} = customHandler;
-			const valueId = factory.createIdentifier(sourceParam.name.getText());
 
-			const checker = program.getTypeChecker();
+			const valueId =
+				sourceParam !== undefined
+					? factory.createIdentifier(sourceParam.name.getText())
+					: factory.createUniqueName("debug");
+
+			const checker = state.typeChecker;
 			const methodSignature = checker.getSignatureFromDeclaration(customHandler);
 			if (methodSignature) {
 				const returnType = methodSignature.getReturnType();
@@ -122,15 +146,22 @@ export function transformToIIFEDebugPrint(
 			}
 
 			return factory.createCallExpression(
-				factory.createParenthesizedExpression(
-					factory.createArrowFunction(
-						undefined,
-						undefined,
-						[factory.createParameterDeclaration(undefined, undefined, undefined, valueId)],
-						undefined,
-						undefined,
-						createCustomIIFEBlock(expression, body, valueId, debugInfo),
-					),
+				factory.createArrowFunction(
+					undefined,
+					undefined,
+					[
+						factory.createParameterDeclaration(
+							undefined,
+							undefined,
+							isLuaTupleType ? factory.createToken(ts.SyntaxKind.DotDotDotToken) : undefined,
+							valueId,
+							undefined,
+							undefined,
+						),
+					],
+					undefined,
+					undefined,
+					createCustomIIFEBlock(state, expression, body, valueId, debugInfo, isLuaTupleType),
 				),
 				undefined,
 				[expression],
@@ -156,7 +187,7 @@ export function transformToIIFEDebugPrint(
 											tmp,
 											undefined,
 											undefined,
-											createDebugObject(expression),
+											createDebugObject(state, expression, isLuaTupleType),
 										),
 									],
 
@@ -180,21 +211,53 @@ export function transformToIIFEDebugPrint(
 			);
 		}
 	} else {
-		const id = factory.createUniqueName("value");
+		const prereqId = factory.createUniqueName("debug");
+		const id = factory.createIdentifier("value");
 
-		return factory.createCallExpression(
-			factory.createParenthesizedExpression(
-				factory.createArrowFunction(
-					undefined,
-					undefined,
-					[factory.createParameterDeclaration(undefined, undefined, undefined, id)],
-					undefined,
-					undefined,
-					createIIFEBlock(id, expression),
-				),
+		state.prereqDeclaration(
+			prereqId,
+			factory.createArrowFunction(
+				undefined,
+				undefined,
+				[
+					factory.createParameterDeclaration(
+						undefined,
+						undefined,
+						undefined,
+						id,
+						undefined,
+						factory.createTypeReferenceNode(
+							state.typeChecker.typeToString(state.typeChecker.getTypeAtLocation(expression)),
+						),
+					),
+				],
+				undefined,
+				undefined,
+				createIIFEBlock(id, expression, isLuaTupleType),
 			),
-			undefined,
-			[expression],
 		);
+
+		return factory.createCallExpression(prereqId, undefined, [expression]);
 	}
 }
+
+export const DebugMacro: CallMacro = {
+	getSymbol(state: TransformState) {
+		const symbol = state.symbolProvider.moduleFile?.get("$dbg");
+		assert(symbol, "Could not find debug macro symbol");
+		return symbol;
+	},
+	transform(state: TransformState, node: ts.CallExpression, { symbol }: MacroInfo) {
+		const { enabled } = state.config;
+
+		const [expression, customHandler] = node.arguments;
+		if (ts.isExpressionStatement(node.parent) && customHandler === undefined) {
+			return enabled
+				? transformToInlineDebugPrint(node, expression)
+				: ts.isCallExpression(expression)
+				? expression
+				: factory.createVoidExpression(factory.createIdentifier("undefined"));
+		}
+		return enabled ? transformToIIFEDebugPrint(expression, customHandler, state) : expression;
+	},
+};

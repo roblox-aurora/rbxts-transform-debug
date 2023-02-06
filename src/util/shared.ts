@@ -91,3 +91,14 @@ export function createDebugPrefixLiteral(node: ts.Node): ts.StringLiteral {
 	const relativePath = path.relative(process.cwd(), node.getSourceFile().fileName).replace(/\\/g, "/");
 	return factory.createStringLiteral(`[${relativePath}:${linePos.line + 1}]`, true);
 }
+
+export function createErrorPrefixLiteral(node: ts.CallExpression): ts.BinaryExpression {
+	const sourceFile = node.getSourceFile();
+	const linePos = sourceFile.getLineAndCharacterOfPosition(node.getStart());
+	const relativePath = path.relative(process.cwd(), node.getSourceFile().fileName).replace(/\\/g, "/");
+	return factory.createBinaryExpression(
+		factory.createStringLiteral(`[${relativePath}:${linePos.line + 1}]`, true),
+		factory.createToken(ts.SyntaxKind.PlusToken),
+		node.arguments[0],
+	);
+}

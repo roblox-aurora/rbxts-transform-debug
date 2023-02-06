@@ -1,3 +1,5 @@
+import { PackageJson } from "types-package-json";
+
 /**
  * The debug information in a `$dbg` custom call
  *
@@ -7,11 +9,56 @@
  * ```
  * to get around the import stripping
  */
-export interface $DebugInfo {
-	file: string;
-	lineNumber: number;
-	rawText: string;
+export interface DbgExpressionInfo {
+	/**
+	 * The current file of this expression
+	 */
+	readonly file: string;
+	/**
+	 * The line number where the expression is
+	 */
+	readonly lineNumber: number;
+	/**
+	 * The raw text of the expression
+	 */
+	readonly rawText: string;
+
+	/**
+	 * Whether or not the expression is a LuaTuple
+	 */
+	readonly isLuaTuple: boolean;
 }
+
+/** @deprecated */
+export type $DebugInfo = DbgExpressionInfo;
+
+export interface FileInfo {
+	/**
+	 * The current file's path
+	 */
+	readonly filePath: string;
+	/**
+	 * The line number of this expression
+	 */
+	readonly lineNumber: number;
+}
+
+export interface PackageJsonInfo extends Readonly<PackageJson> {
+	readonly [value: string]: unknown;
+}
+
+/**
+ * Contains properties in your `package.json` such as `$package.version` being the version.
+ */
+export declare const $package: PackageJsonInfo;
+
+/**
+ * Contains information about the current file
+ *
+ * - `lineNumber` - will use the current line number of the macro
+ * - `filePath` - will be the relative path of your file, relative to the root directory
+ */
+export declare const $file: FileInfo;
 
 /**
  * Creates a debug print for the supplied expression
@@ -23,7 +70,7 @@ export interface $DebugInfo {
  * @param customHandler A custom IIFE handler for debugging this expression
  */
 export function $dbg<T>(expression: T): T;
-export function $dbg<T>(expression: T, customHandler: (value: Readonly<T>, debug: $DebugInfo) => void): T;
+export function $dbg<T>(expression: T, customHandler: (value: Readonly<T>, debug: DbgExpressionInfo) => void): T;
 /**
  * Same as `print`, but includes the source information
  * Will be prefixed with something like `[src/shared/module.ts:11]`
@@ -39,6 +86,14 @@ export function $print(...params: unknown[]): void;
  * This can be optionally enabled/disabled in emit using `enabled` and `environmentRequires`.
  */
 export function $warn(...params: unknown[]): void;
+
+/**
+ * Same as `error`, but includes the source information
+ * Will be prefixed with something like `[src/shared/module.ts:11]`
+ *
+ * This can be optionally enabled/disabled in emit using `enabled` and `environmentRequires`.
+ */
+export function $error(message: string, level?: number): never;
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 
