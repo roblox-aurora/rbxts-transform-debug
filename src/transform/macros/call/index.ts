@@ -1,4 +1,5 @@
 import { CallMacro } from "../macro";
+import { AssertMacro } from "./assert";
 import { CompileTimeMacro } from "./compileTime";
 import { DebugMacro } from "./dbg";
 import { GitMacro } from "./git";
@@ -13,4 +14,5 @@ export const CALL_MACROS = new Array<CallMacro>(
 	WarnMacro,
 	ErrorMacro,
 	NameOfMacro,
+	AssertMacro,
 );

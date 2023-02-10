@@ -80,6 +80,20 @@ export function $dbg<T>(expression: T, customHandler: (value: Readonly<T>, debug
 export function $print(...params: unknown[]): void;
 
 /**
+ * Similar to `assert`, except it's prefixed w/ the inner expression and file info, e.g.
+ * 
+ * ```ts
+ * $assert(x === y, "X is not Y");
+ * ```
+ * 
+ * would result in
+ * 
+ * `[file.ts:1] x === y: X is not Y`
+ * @param condition 
+ */
+export function $assert<T>(condition: T, message?: string): asserts condition;
+
+/**
  * Same as `warn`, but includes the source information
  * Will be prefixed with something like `[src/shared/module.ts:11]`
  *
