@@ -3,6 +3,7 @@ import { AssertMacro } from "./assert";
 import { CompileTimeMacro } from "./compileTime";
 import { DebugMacro } from "./dbg";
 import { GitMacro } from "./git";
+import { KeysOfMacro } from "./keyof";
 import { ErrorMacro, PrintMacro, WarnMacro } from "./logging";
 import { NameOfMacro } from "./nameof";
 
@@ -15,4 +16,5 @@ export const CALL_MACROS = new Array<CallMacro>(
 	ErrorMacro,
 	NameOfMacro,
 	AssertMacro,
+	KeysOfMacro,
 );

@@ -40,8 +40,6 @@ export const NameOfMacro: CallMacro = {
 				const symbol = state.typeChecker.getSymbolAtLocation(argument);
 				const valueDeclaration = symbol?.valueDeclaration;
 
-				console.log(valueDeclaration?.getText(), valueDeclaration ? ts.SyntaxKind[valueDeclaration.kind] : undefined);
-
 				if (valueDeclaration) {
 					if (ts.isClassDeclaration(valueDeclaration)) {
 						return factory.createStringLiteral(valueDeclaration.name?.text ?? "<anonymous>");	

@@ -33,8 +33,6 @@ export const AssertMacro: CallMacro = {
 	},
 	transform(state: TransformState, node: ts.CallExpression) {
 		if (node.arguments.length === 2) {
-			// if custom error
-
 			return factory.updateCallExpression(node, factory.createIdentifier("assert"), undefined, [
 				node.arguments[0],
 				templated`${createDebugPrefixLiteral(node)} ${factory.createStringLiteral(

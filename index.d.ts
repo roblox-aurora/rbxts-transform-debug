@@ -93,6 +93,9 @@ export function $print(...params: unknown[]): void;
  */
 export function $assert<T>(condition: T, message?: string): asserts condition;
 
+export function $keysof<T>(): keyof T;
+export function $keysof<T>(value: T): keyof T;
+
 /**
  * Same as `warn`, but includes the source information
  * Will be prefixed with something like `[src/shared/module.ts:11]`
