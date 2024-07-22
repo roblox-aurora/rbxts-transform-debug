@@ -3,6 +3,10 @@
   "version": "2.2.0",
   "description": "Transformer for debugging things in roblox-ts",
   "main": "out/index.js",
+  "files": [
+    "out",
+    "index.d.ts"
+  ],
   "scripts": {
     "build": "tsc",
     "prepare": "npm run build"
