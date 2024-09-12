@@ -152,7 +152,6 @@ export function transformToIIFEDebugPrint(
 					[
 						factory.createParameterDeclaration(
 							undefined,
-							undefined,
 							isLuaTupleType ? factory.createToken(ts.SyntaxKind.DotDotDotToken) : undefined,
 							valueId,
 							undefined,
@@ -175,7 +174,7 @@ export function transformToIIFEDebugPrint(
 					factory.createArrowFunction(
 						undefined,
 						undefined,
-						[factory.createParameterDeclaration(undefined, undefined, undefined, id)],
+						[factory.createParameterDeclaration(undefined, undefined, id)],
 						undefined,
 						undefined,
 						factory.createBlock([
@@ -223,7 +222,6 @@ export function transformToIIFEDebugPrint(
 					factory.createParameterDeclaration(
 						undefined,
 						undefined,
-						undefined,
 						id,
 						undefined,
 						factory.createTypeReferenceNode(
@@ -247,7 +245,7 @@ export const DebugMacro: CallMacro = {
 		assert(symbol, "Could not find debug macro symbol");
 		return symbol;
 	},
-	transform(state: TransformState, node: ts.CallExpression, { symbol }: MacroInfo) {
+	transform(state: TransformState, node: ts.CallExpression, {}: MacroInfo) {
 		const { enabled } = state.config;
 
 		const [expression, customHandler] = node.arguments;
@@ -255,8 +253,8 @@ export const DebugMacro: CallMacro = {
 			return enabled
 				? transformToInlineDebugPrint(node, expression)
 				: ts.isCallExpression(expression)
-				? expression
-				: factory.createVoidExpression(factory.createIdentifier("undefined"));
+					? expression
+					: factory.createVoidExpression(factory.createIdentifier("undefined"));
 		}
 		return enabled ? transformToIIFEDebugPrint(expression, customHandler, state) : expression;
 	},
