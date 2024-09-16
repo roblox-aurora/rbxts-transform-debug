@@ -19,23 +19,23 @@
   },
   "homepage": "https://github.com/roblox-aurora/rbxts-transform-debug#readme",
   "dependencies": {
-    "chalk": "^4.1.0",
+    "chalk": "^4.1.2",
     "colors": "^1.4.0",
-    "dotenv": "^8.2.0",
-    "execa": "^5.1.1",
+    "dotenv": "^16.4.5",
+    "execa": "^9.3.1",
     "git-repo-info": "^2.1.1",
     "types-package-json": "^2.0.39",
-    "typescript": "~5.2.2"
+    "typescript": "~5.5.2"
   },
   "devDependencies": {
-    "@rbxts/types": "^1.0.428",
-    "@types/node": "^14.14.11",
-    "@types/ts-expose-internals": "npm:ts-expose-internals@4.5.4",
-    "@typescript-eslint/eslint-plugin": "^4.9.0",
-    "@typescript-eslint/parser": "^4.9.0",
-    "eslint": "^7.14.0",
-    "eslint-config-prettier": "^6.15.0",
-    "eslint-plugin-prettier": "^3.1.4",
-    "prettier": "^2.2.1"
+    "@rbxts/types": "^1.0.805",
+    "@types/node": "^22.5.4",
+    "@types/ts-expose-internals": "npm:ts-expose-internals@5.5.2",
+    "@typescript-eslint/eslint-plugin": "^8.5.0",
+    "@typescript-eslint/parser": "^8.5.0",
+    "eslint": "^8.57.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-prettier": "^5.2.1",
+    "prettier": "^3.3.3"
   }
 }
