@@ -1,6 +1,26 @@
 # rbxts-transform-debug
 A debugging transformer for roblox-ts. Contains helper functions for debugging roblox-ts code with debug information attached.
 
+## Installation
+
+1. Add the package to your roblox-ts project:
+   ```sh
+   npm install rbxts-transform-debug --save-dev
+   ```
+
+2. Configure tsconfig.json
+    ```json
+    {
+        "compilerOptions": {
+            "plugins": [
+                {
+                    "transform": "rbxts-transform-debug"
+                }
+            ]
+        }
+    }
+    ```
+
 ## How it works
 
 Say we have this example code:
